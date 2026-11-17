@@ -1,0 +1,13 @@
+PHOTOS DES TALENTS
+
+Dépose ici une photo par artiste, au format JPG, nommée d'après son slug :
+
+  satine.jpg        filiz.jpg           mitty.jpg
+  donnelli.jpg      axel-logan.jpg
+  antoine-bertin.jpg  theo-tanneau.jpg
+
+L'image remplace automatiquement la tuile de couleur dans la Galerie.
+Format conseillé : carrée (ex. 800 x 800 px). Si le fichier est absent,
+la tuile de couleur reste affichée — rien ne casse.
+
+Le slug est le nom utilisé dans les liens : selecta.agency/talent/<slug>

@@ -1,0 +1,48 @@
+/* Pages légales — même langage visuel que le site Selecta */
+:root {
+  --bg: #0B0A10; --card: #16151C; --line: #2A2930;
+  --txt: #F5F4F8; --muted: #A9A7B4; --accent: #FF5A1F;
+  --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, sans-serif;
+  --disp: Archivo, "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--txt);
+  font: 16px/1.65 var(--sf); padding: 40px 22px 90px;
+}
+.wrap { max-width: 720px; margin: 0 auto; }
+a { color: #FFB49A; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.top { display: flex; align-items: center; gap: 14px; margin-bottom: 34px; }
+.top a.back {
+  display: inline-flex; align-items: center; gap: 7px; text-decoration: none;
+  font-size: 14px; color: var(--muted); border: 1px solid var(--line);
+  padding: 8px 13px; border-radius: 999px;
+}
+.top a.back:hover { color: var(--txt); border-color: #4A4854; }
+.brand { font-family: var(--disp); font-weight: 700; letter-spacing: -.02em; font-size: 15px;
+  text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--disp); font-size: clamp(30px, 6vw, 42px); line-height: 1.08;
+  letter-spacing: -.03em; margin: 0 0 10px; }
+.lead { color: var(--muted); font-size: 15px; margin: 0 0 34px; }
+h2 { font-family: var(--disp); font-size: 20px; letter-spacing: -.01em; margin: 44px 0 10px; }
+h3 { font-size: 16px; margin: 22px 0 6px; }
+p, li { color: #E4E2EA; }
+ul { padding-left: 20px; }
+li { margin: 4px 0; }
+.muted { color: var(--muted); }
+.fill { background: rgba(255,90,31,.14); border: 1px dashed rgba(255,90,31,.55);
+  border-radius: 5px; padding: 1px 6px; font-size: .92em; color: #FFC9B6; white-space: nowrap; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0 8px; font-size: 14px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; }
+.note { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px; margin: 18px 0; font-size: 14.5px; }
+footer.legal-foot { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--line);
+  font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 18px; }
+@media (prefers-color-scheme: light) {
+  :root { --bg: #FFFFFF; --card: #F6F5FA; --line: #E4E2EC; --txt: #14131A; --muted: #6E6C78; }
+  p, li { color: #2A2933; }
+  .fill { color: #A63C12; }
+}
