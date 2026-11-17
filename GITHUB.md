@@ -3,7 +3,18 @@
 Le site est du HTML/CSS/JS pur : pas de compilation, pas de dépendances.
 Un dépôt Git peut donc être publié tel quel.
 
-## 1. Créer le dépôt (Théo, 5 min)
+## 1. Créer le dépôt — ✅ déjà fait
+
+Dépôt : **https://github.com/selectaagency/selecta-site** (privé, branche `main`).
+Le dossier local `~/Sites/selecta-v10` est relié à ce dépôt (`origin`).
+Pour envoyer une modification depuis le terminal :
+
+```bash
+cd ~/Sites/selecta-v10
+git add -A && git commit -m "ce que j'ai changé" && git push
+```
+
+L'historique des étapes qui ont mené là (à titre de référence) :
 
 1. Aller sur **github.com** → créer un compte si besoin (gratuit).
 2. Bouton **+** en haut à droite → **New repository**.
