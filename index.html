@@ -1971,6 +1971,9 @@ body.piano-rot { overflow: hidden; }
 /* ---------- Shorts : plein écran, défilement vertical ---------- */
 .yts { flex: 1; min-height: 0; position: relative; background: #000; }
 .yts[hidden] { display: none !important; }
+.yt.shorts-mode .yt-search { display: none; }
+.yt.shorts-mode .y2-top { background: rgba(0,0,0,.55); color: #fff; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.yt.shorts-mode .y2-top svg, .yt.shorts-mode .y2-logo { filter: none; }
 .y2-chips[hidden], .y2-feed[hidden] { display: none !important; }
 .yts-scroll { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory;
   -webkit-overflow-scrolling: touch; scrollbar-width: none; overscroll-behavior-y: contain; }
@@ -2418,9 +2421,11 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 .igv-more { color: var(--muted); font-size: 13px; text-decoration: none; }
 /* YouTube : filtre sélectionné lisible en thème clair ; barre du bas toujours en bas */
 .phone.light .y2-chip.on { background: #0F0F0F; color: #fff; }
-.yt .app-body { display: flex; flex-direction: column; }
-.yt .app-body > * { flex-shrink: 0; }
-.yt .y2-feed { flex: 1 0 auto; }
+.yt .app-body { display: flex; flex-direction: column; overflow: hidden; }
+  .yt .app-body > * { flex-shrink: 0; }
+  /* seul le fil défile : la barre du haut et les onglets restent en place */
+  .yt .y2-feed { flex: 1 1 auto; min-height: 0; overflow-y: auto;
+    -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
 /* Calendrier : les dates officielles mènent aux billets */
 .cal-tix { flex: none; height: 30px; padding: 0 12px; border-radius: 15px; border: 0; font-size: 13px; font-weight: 600;
   background: rgba(255,59,48,.12); color: #FF3B30; }
@@ -7701,6 +7706,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       body.hidden = true;
       if (chips) chips.hidden = true;
       if (ytsBox) { ytsBox.hidden = false; buildShorts(); }
+      document.querySelector('.yt').classList.add('shorts-mode');
       var tb = document.getElementById('y2-tabs');
       if (tb) Array.prototype.forEach.call(tb.querySelectorAll('.y2-tab'), function (b) {
         b.classList.toggle('on', b.getAttribute('data-tab') === 'shorts');
@@ -7708,6 +7714,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       return;
     }
     body.hidden = false;
+    document.querySelector('.yt').classList.remove('shorts-mode');
     if (chips) chips.hidden = false;
     if (ytsBox && !ytsBox.hidden) { ytsBox.hidden = true; stopShorts(); }
     var list = all();
@@ -7759,18 +7766,10 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     var list = shortsList();
     if (ytsBuilt && box.querySelector('.yts-item')) return;
     box.innerHTML = '<div class="yts-scroll" id="yts-scroll">' + list.map(function (v) {
+      /* Le lecteur YouTube affiche déjà ses propres commandes (chaîne, titre,
+         j’aime, commentaires, partage) : on n’en rajoute pas par-dessus. */
       return '<div class="yts-item" data-id="' + esc(v.id) + '">' +
         '<div class="yts-holder"></div>' +
-          '<div class="yts-rail">' +
-          '<button class="yts-act" type="button" data-ytlike="' + esc(v.id) + '" aria-label="J’aime">♥</button>' +
-          '<button class="yts-act" type="button" aria-label="Commentaires">💬</button>' +
-          '<button class="yts-act" type="button" aria-label="Partager">↗</button>' +
-          '<a class="yts-act" href="https://www.youtube.com/shorts/' + esc(v.id) + '" target="_blank" rel="noopener" aria-label="Ouvrir sur YouTube">▶</a>' +
-        '</div>' +
-        '<div class="yts-meta"><b><span class="yts-av">' + esc((v.chan || v.artist || 'Y').charAt(0)) + '</span>@' +
-          esc((v.chan || v.artist || '').toLowerCase().replace(/[^a-z0-9]/g, '')) + '</b>' +
-          '<span class="yts-cap">' + esc(v.title) + '</span>' +
-          '<span class="yts-sub">S’abonner</span></div>' +
         '</div>';
     }).join('') + '</div>';
     var scroll = box.querySelector('.yts-scroll');
