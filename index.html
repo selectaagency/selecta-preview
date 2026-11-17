@@ -1510,6 +1510,14 @@ body.piano-wide .lang-out { display: none; }
 .pr-tixchip b { font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; }
 .pr-tixchip .tk { width: 15px; height: 10px; border-radius: 2px; background: #FBF6E4; box-shadow: inset 3px 0 0 #7B5BB5, inset 0 -3px 0 -2px #6B4A2E; }
 .pr-tixchip.pop { animation: prPop .28s ease; }
+/* la pastille du haut montre maintenant la carte Navigo : grisée, en poche (bleue), ou volée */
+.pr-tixchip .tk { width: 18px; height: 12px; border-radius: 2px; background: linear-gradient(90deg, #3B3E46 0 48%, #8FC3E8 48%); box-shadow: none; opacity: .45; }
+.pr-tixchip b { font-size: 12.5px; min-width: 0; }
+.pr-tixchip.has { background: #2F6BFF; }
+.pr-tixchip.has .tk { opacity: 1; }
+.pr-tixchip.stolen { background: #8E3BD9; }
+.pr-tixchip.stolen .tk { opacity: .3; }
+.pr-flag.k { background: #8E3BD9; animation: prBlink .5s steps(2) infinite; }
 @keyframes prPop { 40% { transform: scale(1.12); } }
 .pr-hearts { display: flex; gap: 3px; }
 .pr-hearts i { width: 15px; height: 14px; background: rgba(255,255,255,.25);
@@ -1519,6 +1527,49 @@ body.piano-wide .lang-out { display: none; }
 .pr-prog { height: 3px; flex: 1; border-radius: 2px; background: rgba(255,255,255,.22); overflow: hidden; }
 .pr-prog i { display: block; height: 100%; background: #fff; transform-origin: left; transform: scaleX(0); }
 .pr-time { font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,.85); font-variant-numeric: tabular-nums; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+/* chronomètre (centièmes) : pastille discrète ; en speedrun, plus visible avec un petit chrono */
+.pr-hrow .pr-time { min-width: 58px; height: 22px; padding: 0 8px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(18,16,26,.5); font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: -.02em; }
+.pr-hrow.sr .pr-time { background: #FF5A8A; color: #fff; text-shadow: none; box-shadow: 0 0 12px rgba(255,90,138,.45); }
+.pr-hrow.sr .pr-time::before { content: "⏱"; margin-right: 4px; font-size: 10px; }
+.pr-flag { display: none; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 10.5px; font-weight: 900; letter-spacing: .06em; }
+.pr-flag.on { display: inline-flex; }
+.pr-flag.p { background: #2F6BFF; }
+.pr-flag.w { background: #FF5A8A; animation: prBlink .6s steps(2) infinite; }
+/* speedrun : bouton du menu, lignes d'état, gros chrono */
+.pr-btn.pr-srbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; background: #2F6BFF; box-shadow: 0 4px 0 #1F47B8, 0 10px 24px rgba(47,107,255,.3); }
+.pr-btn.pr-srbtn:active { box-shadow: 0 1px 0 #1F47B8; }
+.pr-srbtn small { font-size: 11.5px; font-weight: 600; opacity: .85; }
+.pr-stopw { display: none; }
+.pr-srline { align-self: center; padding: 6px 12px; border-radius: 12px; background: rgba(255,90,138,.18); font-size: 13px; color: #FFD6E6; font-variant-numeric: tabular-nums; }
+.pr-srbig { align-self: center; font-family: ui-monospace, Menlo, monospace; font-size: 40px; font-weight: 800; letter-spacing: -.03em; color: #fff; text-shadow: 0 0 18px rgba(255,90,138,.55); }
+.pr-srsplit { align-self: center; font-size: 13.5px; color: rgba(255,255,255,.8); }
+/* nouveau record : sticker qui tombe et rebondit */
+.pr-record { align-self: center; display: flex; flex-direction: column; align-items: center; padding: 8px 18px; border-radius: 14px; background: #FFE45C; color: #C2185B;
+  font-size: 17px; font-weight: 900; letter-spacing: .04em; box-shadow: 0 0 0 3px #fff, 0 0 0 5px #FF5A8A, 0 10px 24px rgba(255,90,138,.4);
+  animation: prRecord .9s cubic-bezier(.2,1.6,.4,1) both, prShine 2.4s 1s ease-in-out infinite; transform: rotate(-3deg); }
+.pr-record b { font-family: ui-monospace, Menlo, monospace; font-size: 15px; }
+.pr-record small { font-size: 11px; font-weight: 700; color: #8A3A5A; letter-spacing: 0; }
+@keyframes prRecord { 0% { transform: translateY(-30px) scale(.3) rotate(-14deg); opacity: 0; } 60% { opacity: 1; } 100% { transform: translateY(0) scale(1) rotate(-3deg); } }
+@keyframes prShine { 50% { transform: rotate(2deg) scale(1.04); } }
+/* onglets des classements */
+.pr-lbtabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255,255,255,.08); }
+.pr-lbt { height: 34px; border-radius: 9px; font-size: 12.5px; font-weight: 900; letter-spacing: .08em; color: rgba(255,255,255,.7); background: transparent; }
+.pr-lbt.on { background: #FFCE00; color: #1D1D1B; }
+/* grand final (Franklin D. Roosevelt) */
+.pr-finale { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 10px 12px; border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255,143,208,.28), rgba(127,232,255,.18) 55%, rgba(255,228,92,.22)); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.35), 0 0 30px rgba(255,90,168,.35); }
+.pr-fin-t { display: flex; flex-wrap: wrap; justify-content: center; font-size: 27px; font-weight: 900; letter-spacing: .02em; line-height: 1.15; }
+.pr-fin-t i { font-style: normal; display: inline-block; background: linear-gradient(180deg, #FFFFFF, #FFD6EC 45%, #FF5AA8); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #8E3BD9) drop-shadow(0 0 8px rgba(255,90,168,.6)); animation: prFinIn .6s cubic-bezier(.2,1.6,.4,1) both, prFinWave 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--k) * 45ms), calc(.8s + var(--k) * 70ms); }
+@keyframes prFinIn { from { transform: translateY(-24px) scale(.2); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes prFinWave { 50% { transform: translateY(-4px); } }
+.pr-fin-sub { font-size: 13px; color: #FFE6F6; }
+.pr-fin-row { display: flex; gap: 10px; width: 100%; }
+.pr-fin-row span { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 6px; border-radius: 12px; background: rgba(14,11,30,.5); font-size: 11.5px; color: rgba(255,255,255,.75); }
+.pr-fin-row b { font-family: ui-monospace, Menlo, monospace; font-size: 20px; color: #fff; margin-top: 2px; }
+.pr-lbn small { display: block; font-size: 11px; font-weight: 600; color: rgba(255,255,255,.55); font-variant-numeric: tabular-nums; }
 .pr-warn { align-self: center; display: none; height: 28px; padding: 0 12px; border-radius: 14px; background: #FFCE00; color: #1D1D1B;
   font-size: 12.5px; font-weight: 800; align-items: center; gap: 6px; animation: prBlink .5s steps(2) infinite; }
 .pr-warn.on { display: inline-flex; }
@@ -1554,7 +1605,8 @@ body.piano-wide .lang-out { display: none; }
 /* écrans : menu, pause, victoire */
 .pr-ui { position: absolute; inset: 0; z-index: 6; display: none; overflow-y: auto; -webkit-overflow-scrolling: touch;
   padding: calc(60px + env(safe-area-inset-top)) 18px 40px; color: #fff; touch-action: pan-y; }
-.pr-ui.on { display: flex; flex-direction: column; align-items: center; justify-content: center; animation: prFade .25s ease; }
+.pr-ui.on { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; animation: prFade .25s ease; }
+/* le contenu se centre par ses marges automatiques : s'il dépasse (13 stations), on défile depuis le haut au lieu de couper le titre */
 .pr-ui:not(.menu) { background: rgba(14,12,22,.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 @keyframes prFade { from { opacity: 0; } }
 .pr-menu, .pr-panel { width: 100%; max-width: 340px; margin: auto; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
@@ -1622,7 +1674,7 @@ body.piano-wide .lang-out { display: none; }
 .pr-line { position: relative; display: flex; flex-direction: column; padding: 4px 0; border-radius: 18px; background: rgba(18,16,26,.62);
   -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: inset 0 0 0 .5px rgba(255,255,255,.12); }
 .pr-line::before { content: ""; position: absolute; left: 26px; top: 26px; bottom: 26px; width: 4px; border-radius: 2px; background: rgba(255,255,255,.85); }
-.pr-stop { position: relative; display: flex; align-items: center; gap: 9px; min-height: 48px; padding: 0 14px 0 20px; text-align: left; color: #fff; }
+.pr-stop { position: relative; display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 0 14px 0 20px; text-align: left; color: #fff; }
 .pr-stop .pr-dot { width: 16px; height: 16px; border-radius: 50%; background: #121016; box-shadow: inset 0 0 0 3.5px #fff; flex: none; z-index: 1; }
 .pr-stop.done .pr-dot { background: #fff; }
 .pr-sname { flex: 1; font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
@@ -2422,6 +2474,13 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 /* YouTube : filtre sélectionné lisible en thème clair ; barre du bas toujours en bas */
 .phone.light .y2-chip.on { background: #0F0F0F; color: #fff; }
 .yt .app-body { display: flex; flex-direction: column; overflow: hidden; }
+  /* l'app descend jusqu'en bas de l'écran : la barre d'onglets passe sous l'indicateur d'accueil,
+     comme dans la vraie app (la zone de geste reste par-dessus, sans prendre de place) */
+  .yt > .home-bar { position: absolute; left: 50%; bottom: 0; margin-left: -90px; background: transparent; }
+  .yt .y2-tabs { padding-bottom: 34px; }
+  /* l'indicateur d'accueil global (.home-ind) passe en sombre sur la barre d'onglets claire */
+  .phone.light[data-screen="yt"] .home-ind { background: rgba(0,0,0,.8); }
+  .ipad .yt .y2-tabs { padding-bottom: 14px; }
   .yt .app-body > * { flex-shrink: 0; }
   /* seul le fil défile : la barre du haut et les onglets restent en place */
   .yt .y2-feed { flex: 1 1 auto; min-height: 0; overflow-y: auto;
@@ -2858,7 +2917,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
           <span class="pr-chip pr-tixchip"><span class="tk"></span><b id="pr-tix">0</b></span>
           <span class="pr-chip pr-hearts" id="pr-hearts"></span>
         </div>
-        <div class="pr-hrow"><span class="pr-prog"><i id="pr-bar"></i></span><span class="pr-time" id="pr-time">0:00</span></div>
+        <div class="pr-hrow"><span class="pr-prog"><i id="pr-bar"></i></span><span class="pr-chip pr-flag" id="pr-flag"></span><span class="pr-time" id="pr-time">0:00.00</span></div>
         <span class="pr-warn" id="pr-warn">Train en approche</span>
       </div>
       <div class="pr-announce" id="pr-announce"></div>
@@ -4550,7 +4609,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     gs.zone = undefined; gs.zoneBanner = null; gs.glitch = 0; gs.shake = 0;
     /* Kappa : à chaque partie, à un moment tiré au hasard entre 5 s et 40 s de jeu (unités : 60 par seconde) */
     gs.kappa = null; gs.playT = 0; gs.kShake = 0; gs.kBy = false; gs.legs = 0;
-    gs.kPlan = Math.random() < KAPPA.chance ? (5 + Math.random() * 35) * 60 : 0;
+    gs.kPlan = Math.random() < KAPPA.chance ? gKappaPlan() : 0; gs.kVisits = 0;
     var ce = document.getElementById('g-cats'); if (ce) ce.hidden = true;
     gGen();
   }
@@ -4673,17 +4732,27 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       gUI();
       gLbAfterRun();
   }
-  /* ---------- Kappa : mini-boss rare et imprévisible ----------
-     Unités de jeu : 60 par seconde. Une apparition par partie, à un moment aléatoire. Il surgit du bas, du côté opposé à Satine, poursuit
-     environ 10 s puis replonge. Plus lent que Satine à l'horizontale (3,4 contre 6) :
-     on lui échappe en esquivant de côté ou en grimpant vite. Seule la musique accélère. */
-  var KAPPA = { chance: 1, minClimb: 0, warn: 50, enter: 48, acc: 0.15, vmax: 3.4, drift: 0.7,
-                chase: [560, 680], hit: 25, grace: 18, bonus: 500, w: 84 };
+  /* ---------- Kappa : mini-boss imprévisible ----------
+     Unités de jeu : 60 par seconde. Au moins une apparition par partie, à un moment tiré au hasard
+     (tôt, au milieu ou tard), parfois une seconde visite. Il prévient 1,5 s avant, surgit du bas loin
+     de Satine, rôde puis fonce par à-coups, en visant là où elle était plutôt que là où elle est.
+     Vitesse modérée (1,7 à 2,6 contre 6 pour Satine à l'horizontale) : il la suit de près pendant 11 à 14 s,
+     revient vite s'il est semé hors de l'écran, mais on lui échappe en esquivant de côté ou en grimpant. */
+  var KAPPA = { chance: 1, minClimb: 0, warn: 80, enter: 54, acc: 0.1, slow: 1.65, dash: 0.95, cycle: 170, aim: 0.075, ceil: 0.22,
+                drift: 0.72, chase: [660, 840], hit: 20, grace: 45, bonus: 500, w: 84, again: 0.35 };
+  /* moment de la 1re apparition : tôt (4-14 s), milieu (14-32 s) ou tard (32-55 s) */
+  function gKappaPlan() {
+    var r = Math.random();
+    return (r < 0.3 ? 4 + Math.random() * 10 : r < 0.72 ? 14 + Math.random() * 18 : 32 + Math.random() * 23) * 60;
+  }
   function gKappaSpawn() {
-    var p = gs.p;
-    gs.kappa = { x: p.x < gs.w / 2 ? gs.w * 0.8 : gs.w * 0.2, y: gs.h + 80, vx: 0, vy: 0,
-                 ph: 'warn', t: 0, dur: KAPPA.chase[0] + Math.random() * (KAPPA.chase[1] - KAPPA.chase[0]) };
-    gs.kBy = true;
+    var p = gs.p, x;
+    /* entrée par le bas, à un endroit varié mais toujours à bonne distance de Satine */
+    for (var i = 0; i < 12; i++) { x = gs.w * (0.14 + Math.random() * 0.72); if (Math.abs(x - p.x) > gs.w * 0.38) break; }
+    if (Math.abs(x - p.x) <= gs.w * 0.38) x = p.x < gs.w / 2 ? gs.w * 0.84 : gs.w * 0.16;
+    gs.kappa = { x: x, y: gs.h + 80, vx: 0, vy: 0, ax: x, ay: gs.h, ph: 'warn', t: 0, seed: Math.random() * 6.28,
+                 dur: KAPPA.chase[0] + Math.random() * (KAPPA.chase[1] - KAPPA.chase[0]) };
+    gs.kBy = true; gs.kVisits = (gs.kVisits || 0) + 1; gs.kPlan = 0;
     a3sfx('kappa');
     a3rate(2, 0.25);                                   /* la musique passe en ×2 tout de suite */
   }
@@ -4696,26 +4765,33 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   function gKappaUpdate(f) {
     gs.playT += f;
     if (gs.kShake > 0) gs.kShake = Math.max(0, gs.kShake - 0.03 * f);
-    if (!gs.kappa && !gs.kBy && gs.kPlan && gs.playT >= gs.kPlan && gs.climbed >= KAPPA.minClimb) gKappaSpawn();
+    if (!gs.kappa && gs.kPlan && gs.playT >= gs.kPlan && gs.climbed >= KAPPA.minClimb) gKappaSpawn();
     var k = gs.kappa; if (!k) return;
     k.t += f;
     var p = gs.p, cx = p.x, cy = p.y - 12;
     if (k.ph === 'warn') {
-      k.x += (( p.x < gs.w / 2 ? gs.w * 0.8 : gs.w * 0.2) - k.x) * 0.04 * f;   /* reste du côté opposé */
       if (k.t >= KAPPA.warn) { k.ph = 'enter'; k.t = 0; gs.kShake = 1; gs.glitch = Math.max(gs.glitch, 0.3); gs.flash = 0.6; }
     } else if (k.ph === 'enter') {
       var e = Math.min(1, k.t / KAPPA.enter), c1 = 1.7;
       var ease = 1 + (c1 + 1) * Math.pow(e - 1, 3) + c1 * Math.pow(e - 1, 2);   /* sortie avec léger dépassement */
-      k.y = gs.h + 80 - (gs.h * 0.24 + 80) * ease;
-      if (e >= 1) { k.ph = 'chase'; k.t = 0; k.vy = -1; }
+      k.y = gs.h + 80 - (gs.h * 0.18 + 80) * ease;
+      if (e >= 1) { k.ph = 'chase'; k.t = 0; k.vy = -0.5; k.ax = k.x; k.ay = k.y - 60; }
     } else if (k.ph === 'chase') {
-      var tx = cx + p.vx * 5, ty = cy;                /* anticipe un peu l'horizontale, pas les sauts */
-      var dx = tx - k.x, dy = ty - k.y, d = Math.hypot(dx, dy) || 1;
+      /* il vise avec retard (point qui suit Satine mollement) et zigzague un peu : jamais pile sur elle */
+      var la = 1 - Math.pow(1 - KAPPA.aim, f);
+      k.ax += (cx + Math.sin(k.t * 0.05 + k.seed) * 34 - k.ax) * la;
+      k.ay += (cy + Math.cos(k.t * 0.037 + k.seed) * 22 - k.ay) * la;
+      var dx = k.ax - k.x, dy = k.ay - k.y, d = Math.hypot(dx, dy) || 1;
       k.vx += dx / d * KAPPA.acc * f; k.vy += dy / d * KAPPA.acc * f;
-      var vm = KAPPA.vmax * (1 + 0.12 * Math.min(1, k.t / k.dur)), v = Math.hypot(k.vx, k.vy);
+      /* rôde, puis fonce par à-coups (2,5 s par cycle) */
+      var cyc = Math.max(0, Math.sin(k.t * 6.283 / KAPPA.cycle + k.seed));
+      k.dashing = cyc > 0.6;
+      var vm = KAPPA.slow + KAPPA.dash * cyc * cyc, v = Math.hypot(k.vx, k.vy);
+      if (k.y > gs.h - 10) vm *= 1.45;                  /* semé sous l'écran : il remonte vite pour reprendre la poursuite */
       if (v > vm) { k.vx *= vm / v; k.vy *= vm / v; }
       k.x += k.vx * f; k.y += k.vy * f;
       k.x = Math.max(24, Math.min(gs.w - 24, k.x));
+      if (k.y < gs.h * KAPPA.ceil) { k.y = gs.h * KAPPA.ceil; k.vy = Math.max(k.vy, 0); }
       if (k.y > gs.h + 140) { k.y = gs.h + 140; k.vy = Math.min(k.vy, 0); }
       if (k.t > KAPPA.grace && Math.hypot(cx - k.x, cy - k.y) < KAPPA.hit) {
         k.ph = 'caught'; k.t = 0; k.vx = k.vy = 0;
@@ -4723,7 +4799,11 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
         gGameOver();
         return;
       }
-      if (k.t >= k.dur) gKappaLeave(k);
+      if (k.t >= k.dur) {
+        gKappaLeave(k);
+        /* parfois, il reviendra plus tard dans la partie */
+        if (gs.kVisits < 2 && Math.random() < KAPPA.again) gs.kPlan = gs.playT + (20 + Math.random() * 25) * 60;
+      }
     } else if (k.ph === 'leave') {
       k.vy += 0.22 * f; k.vx *= Math.pow(0.95, f);
       k.x += k.vx * f; k.y += k.vy * f;
@@ -4771,7 +4851,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     }
     var bob = k.ph === 'caught' ? 0 : Math.sin(gs.t * 0.3) * 3;
     var tilt = Math.max(-0.35, Math.min(0.35, k.vx * 0.07)) + (k.ph === 'leave' ? Math.sin(k.t * 0.4) * 0.2 : 0);
-    var sq = 1 + Math.sin(gs.beat * 2) * 0.04;
+    var sq = (1 + Math.sin(gs.beat * 2) * 0.04) * (k.dashing ? 1.06 : 1);   /* il gonfle un peu quand il fonce */
     gx.save();
     gx.translate(Math.round(k.x), Math.round(k.y + bob));
     gx.rotate(tilt);

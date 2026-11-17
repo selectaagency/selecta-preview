@@ -59,3 +59,12 @@ couvre ce cas.
 - **Paname rend fou** : la somme des meilleurs scores de chaque station (5 stations).
   Score d'une station = tickets × 100 + pass Navigo × 500 + étoiles × 1 000
   + bonus de vitesse (20 points par seconde sous 1,5 × le temps objectif) − 200 par fraude.
+
+## Mise à jour « Paname rend fou » v2 (13 stations, speedrun)
+
+Exécuter **une fois** `supabase/paname_v2.sql` dans Supabase (SQL Editor → coller → Run),
+après `classements.sql`. Il ne supprime rien : il ajoute les règles des 8 nouvelles stations,
+le classement **SPEEDRUN** (niveau 100 = ligne complète, temps le plus court) et la fonction
+`lb_top2` (TOP SCORES avec départage au temps, ou SPEEDRUN). Tant qu'il n'est pas exécuté,
+le site reste fonctionnel : le tableau des scores s'affiche comme avant et le speedrun
+indique « bientôt en ligne ».

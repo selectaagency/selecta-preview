@@ -57,21 +57,28 @@
         return r;
       });
     },
-    top: function (game, fresh) {
+    /* mode : rien (ancien tableau), 'score' (TOP SCORES, temps en départage) ou 'speed' (SPEEDRUN) */
+    top: function (game, fresh, mode) {
       if (!enabled) return Promise.reject(Object.assign(new Error('offline'), { code: 'offline' }));
-      var c = cache[game];
+      var key = game + (mode || ''), c = cache[key];
       if (c && !fresh && Date.now() - c.t < 20000) return Promise.resolve(c.v);
-      return rpc('lb_top', { p_game: game, p_player: player }).then(function (v) { cache[game] = { t: Date.now(), v: v }; return v; });
+      var req = mode ? rpc('lb_top2', { p_game: game, p_player: player, p_mode: mode }).catch(function (e) {
+        /* serveur pas encore à jour : le tableau des scores reste disponible, le speedrun arrive bientôt */
+        if (e && e.code !== 'offline' && mode === 'score') return rpc('lb_top', { p_game: game, p_player: player });
+        if (e && e.code !== 'offline') e.code = 'soon';
+        throw e;
+      }) : rpc('lb_top', { p_game: game, p_player: player });
+      return req.then(function (v) { cache[key] = { t: Date.now(), v: v }; return v; });
     },
     /* messages d'erreur lisibles */
     why: function (e, en) {
       var c = (e && e.code) || 'error';
       var fr = { offline: 'Connexion impossible pour le moment.', bad_name: 'Ce pseudo n’est pas accepté. Essaie-en un autre.',
         rate_limited: 'Trop de parties d’un coup : réessaie dans quelques minutes.', bad_token: 'Partie expirée : rejoue pour enregistrer.',
-        no_token: 'Partie lancée hors ligne : rejoue connecté pour enregistrer.', implausible: 'Score refusé par le contrôle anti-triche.', mismatch: 'Score refusé par le contrôle anti-triche.' };
+        no_token: 'Partie lancée hors ligne : rejoue connecté pour enregistrer.', implausible: 'Score refusé par le contrôle anti-triche.', mismatch: 'Score refusé par le contrôle anti-triche.', soon: 'Classement speedrun bientôt en ligne ♡', bad_level: 'Classement de cette station bientôt en ligne ♡' };
       var enT = { offline: 'Can’t connect right now.', bad_name: 'That name isn’t allowed. Try another one.',
         rate_limited: 'Too many games at once: try again in a few minutes.', bad_token: 'Run expired: play again to save.',
-        no_token: 'Run started offline: play again online to save.', implausible: 'Score rejected by the anti-cheat check.', mismatch: 'Score rejected by the anti-cheat check.' };
+        no_token: 'Run started offline: play again online to save.', implausible: 'Score rejected by the anti-cheat check.', mismatch: 'Score rejected by the anti-cheat check.', soon: 'Speedrun board coming soon ♡', bad_level: 'This station’s board is coming soon ♡' };
       return (en ? enT : fr)[c] || (en ? 'Something went wrong.' : 'Un souci est survenu.');
     },
     clean: function (s) { return String(s || '').replace(/\s+/g, ' ').replace(/[^A-Za-z0-9À-ÖØ-öø-ÿ _.\-♡★✿]/g, '').trim().slice(0, 14); },
