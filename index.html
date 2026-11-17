@@ -1967,6 +1967,40 @@ body.piano-rot { overflow: hidden; }
 
 /* ---------- YouTube façon iOS ---------- */
 .yt .app-body { padding: 0 0 0; background: var(--card); }
+
+/* ---------- Shorts : plein écran, défilement vertical ---------- */
+.yts { flex: 1; min-height: 0; position: relative; background: #000; }
+.yts[hidden] { display: none !important; }
+.y2-chips[hidden], .y2-feed[hidden] { display: none !important; }
+.yts-scroll { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; overscroll-behavior-y: contain; }
+.yts-scroll::-webkit-scrollbar { display: none; }
+.yts-item { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always;
+  background: #000; overflow: hidden; }
+.yts-holder, .yts-holder iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.yts-ttl { position: absolute; top: 8px; left: 0; right: 0; text-align: center; z-index: 3;
+  color: #fff; font-size: 15px; font-weight: 700; letter-spacing: .2px;
+  text-shadow: 0 1px 8px rgba(0,0,0,.65); pointer-events: none; }
+.yts-rail { position: absolute; right: 8px; bottom: 104px; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 15px; }
+.yts-act { width: 44px; height: 44px; border-radius: 50%; border: 0;
+  background: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  color: #fff; font-size: 17px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  transition: transform .16s ease, background .16s ease; }
+.yts-act:active { transform: scale(.9); }
+.yts-act.on { background: #FF2D55; }
+.yts-act small { position: absolute; margin-top: 56px; font-size: 9.5px; color: #fff; opacity: .85; }
+.yts-meta { position: absolute; left: 12px; right: 66px; bottom: 82px; z-index: 3; color: #fff; }
+.yts-meta b { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;
+  text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+.yts-av { width: 26px; height: 26px; border-radius: 50%; flex: none; display: flex;
+  align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+  background: rgba(255,255,255,.22); }
+.yts-meta span.yts-cap { display: block; margin-top: 6px; font-size: 12.5px; line-height: 1.35;
+  opacity: .95; text-shadow: 0 1px 6px rgba(0,0,0,.6);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.yts-sub { display: inline-flex; margin-top: 9px; padding: 5px 12px; border-radius: 16px;
+  background: #fff; color: #0B0B0F; font-size: 11.5px; font-weight: 700; }
 .y2-top { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 12px;
   padding: 52px 14px 8px; background: var(--card); }
 .y2-back, .y2-ico { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: var(--txt); border-radius: 50%; }
@@ -2658,6 +2692,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       </form>
       <div class="y2-chips" id="y2-chips"></div>
       <div id="yt-body" class="y2-feed"></div>
+      <div class="yts" id="yts" hidden></div>
       <nav class="y2-tabs" id="y2-tabs" aria-label="YouTube">
         <button class="y2-tab on" data-tab="home" type="button"><i>⌂</i>Accueil</button>
         <button class="y2-tab" data-tab="shorts" type="button"><i>⚡</i>Shorts</button>
@@ -7505,41 +7540,89 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 
   /* Identifiants de vidéos officielles. Format : { id: 'xxxxxxxxxxx', artist: 'Satine' }
      (le titre et la chaîne sont récupérés automatiquement au premier chargement). */
+  /* Vidéos classiques (chaînes officielles), datées à la publication.
+     Relevé le 17/11/2026 : Satine 10, Filiz 19, Mitty 2 (les deux « internet »). */
   var YT_SEED = [
-    { id: 'XuDTN4NQ_LI', artist: 'Satine', chan: 'Satine Wallé', title: "IM PART OF THE LIVING TOMBSTONE LORE NOW :D!! music : pas assez by satine, out 18th september :3!!", date: '2026-09-12' },
-    { id: 'L5z-PqEQlcU', artist: 'Satine', chan: 'Satine Wallé', title: "qui lui dit???? CLIP DISPO SUR YT DÈS MAINTENANT :3!! et mon projet sort le 18 septembre :D!!!!", date: '2026-09-10' },
-    { id: 'UtLWKXKb5zY', artist: 'Satine', chan: 'Satine Wallé', title: "2 aliens - satine (Clip Officiel)", date: '2026-09-08' },
-    { id: 'pLmsvejt9RU', artist: 'Satine', chan: 'Satine Wallé', title: "Satine - anomalisa (Clip Officiel)", date: '2026-06-25' },
-    { id: '7JiRcfbOpxg', artist: 'Satine', chan: 'Satine Wallé', title: "Satine - 320 (Clip Officiel)", date: '2025-05-30' },
-    { id: '09EJfxovXCM', artist: 'Satine', chan: 'Satine Wallé', title: "Satine - Ohoui! (Visualizer)", date: '2025-05-10' },
-    { id: 'cQhWiaAT-do', artist: 'Satine', chan: 'Satine Wallé', title: "Satine - Le monde est à nous (Audio officiel)", date: '2025-03-20' },
-    { id: 'Ah9xfmQ1yzA', artist: 'Satine', chan: 'Satine Wallé', title: "Satine - L'idée de toi (Visualizer)", date: '2024-10-15' },
-    { id: 'UGFjube-Raw', artist: 'Satine', chan: 'Satine Wallé', title: "Satine - Nique le champagne (Clip officiel)", date: '2024-09-04' },
-    { id: '4BR5OE9P2Yc', artist: 'Satine', chan: 'Satine Wallé', title: "Satine - Nique le champagne (Audio officiel)", date: '2024-07-12' },
-    { id: 'w3dLTC_Nwi0', artist: 'Satine', chan: 'Satine Wallé', title: "Satine - C'est toi (Clip officiel)", date: '2024-04-19' },
-    { id: 'voz__XIAOUY', artist: 'Satine', chan: 'Satine Wallé', title: "Un quart d'heure - Satine (Paroles/Lyrics)", date: '2023-05-24' },
-    { id: 'hbsQJzw78WU', artist: 'Satine', chan: 'Satine Wallé', title: "Diffusion en direct de Satine Wallé", date: '2016-09-12' },
-    /* Mitty — chaîne officielle : youtube.com/channel/UC9FyvmLDpzwy7I7d3crY-Ww (@mittotoro) */
-    { id: 'McsEdQeKB4U', artist: 'Mitty', chan: 'Mitty', title: 'internet -Mitty' },
-    { id: '-PO6RUz0F6M', artist: 'Mitty', chan: 'Mitty', title: 'internet lyrics video' },
-    { id: 'l1NQdrzUExI', artist: 'Mitty', chan: 'Mitty - Topic', title: 'SHADY' },
-    { id: 'bhmbGoS6y3E', artist: 'Mitty', chan: 'Mitty - Topic', title: 'Apocalypse' },
-    { id: 'EqranB8cRYM', artist: 'Mitty', chan: 'Mitty - Topic', title: 'some more summer' },
-    { id: '5jwx4GxuZaE', artist: 'Filiz', chan: 'Filiz', title: "J’VOUS AI FAIT UNE SURPRISE #animation #anime #hommecapable #filiz #pourtoi", date: '2026-11-03' },
-    { id: 'aVVM2OL8LW0', artist: 'Filiz', chan: 'Filiz', title: "Homme Capable (Anime Music Video)", date: '2026-11-03' },
-    { id: 'UwGa-UeN7GI', artist: 'Filiz', chan: 'Filiz', title: "J’AI FLOP CETTE TREND 😭 #metro #paname #filiz #pourtoi", date: '2026-11-02' },
-    { id: 'l1rvXhmT9Ws', artist: 'Filiz', chan: 'Filiz', title: "T’ES LE SEUL MEC DE LA SOIRÉE… #likethis #femme #filiz #soiree #pourtoi", date: '2026-10-04' },
-    { id: 'K9Ez-TmupWY', artist: 'Filiz', chan: 'Filiz', title: "Filiz - LIKE THIS (Lyric Video)", date: '2026-10-01' },
-    { id: '-yHK3gB6pXU', artist: 'Filiz', chan: 'Filiz', title: "JE RÉPONDS AUX MÉCHANTS COMMENTAIRES #skyrock #planeterap #filiz #pourtoi", date: '2026-09-28' },
-    { id: 'rsENx_Z9R9o', artist: 'Filiz', chan: 'Filiz', title: "TYPHEE M’INVITE SUR PLANÈTE RAP 😭🤍 #planeterap #paname #typhee #filiz #pourtoi", date: '2026-09-26' },
-    { id: '8NDjZkYR4X0', artist: 'Filiz', chan: 'Filiz', title: "CE MONSIEUR ME PARLAIT MAL… mais… #katseye #paris #filiz #pourtoi", date: '2026-09-21' },
-    { id: 'KtOoxGIce9Q', artist: 'Filiz', chan: 'Filiz', title: "LA NOUVELLE DU GROUPE KATSEYE ?!! #katseye #newmembers  #paris #filiz #pourtoi", date: '2026-09-15' },
-    { id: 'Qyy-Hgf-nDg', artist: 'Filiz', chan: 'Filiz', title: "T’IMPROVISE AU BERCY DE KATSEYE 🥹 #katseye #paris #likethis #pourtoi", date: '2026-09-14' },
-    { id: 'wqCe_ZNaFUU', artist: 'Filiz', chan: 'Filiz', title: "DU PIANO GARE À BERCY 🥹(POUR KATSEYE WSH)  #kasteye #paris #filiz #pourtoi", date: '2026-09-12' },
-    { id: '7mG2UAYcrvc', artist: 'Filiz', chan: 'Filiz', title: "J’CHANTE POUR KATSEYE À PARIS !!! #katseye #paris #filiz #openshow #pourtoi", date: '2026-09-12' },
-    { id: '9hHB_lPViZw', artist: 'Filiz', chan: 'Filiz', title: "Filiz - PANAME REND FOU (Live Session)", date: '2026-09-10' },
-    { id: 'uDfyhZF_cr4', artist: 'Filiz', chan: 'Filiz', title: "BONNE RENTRÉE 💀🎀 #paname #metro #rentree #pourtoi", date: '2026-09-03' },
-    { id: 'wC61J0xa92I', artist: 'Filiz', chan: 'Filiz', title: "AU REVOIR LES VACANCES 🥹 #newmusic #mental #fastlife #pourtoi", date: '2026-09-01' }
+    { id: 'aVVM2OL8LW0', artist: 'Filiz', chan: 'Filiz', title: 'Capable Man (Anime Music Video)', kind: 'video', date: '2026-11-03' },
+    { id: 'K9Ez-TmupWY', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - LIKE THIS (Lyric Video)', kind: 'video', date: '2026-10-01' },
+    { id: '9hHB_lPViZw', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - PANAME REND FOU (Live Session)', kind: 'video', date: '2026-09-10' },
+    { id: 'UtLWKXKb5zY', artist: 'Satine', chan: 'Satine Wallé', title: '2 aliens - satine (Clip Officiel)', kind: 'video', date: '2026-09-08' },
+    { id: 'mKmAurflDHE', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - Very Low (Lyric Video)', kind: 'video', date: '2026-08-27' },
+    { id: 'SOEXdKJbGxg', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - SEE YA ON THE BUS (Lyric Video)', kind: 'video', date: '2026-08-13' },
+    { id: '9yrZNmwg8Mw', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - BURN-OUT BB (Lyric video)', kind: 'video', date: '2026-08-06' },
+    { id: '-vw2NzkeyRo', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - Detours (Lyric Video)', kind: 'video', date: '2026-07-30' },
+    { id: 'KuxXcwjbfwY', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - THE STARS (Live Session)', kind: 'video', date: '2026-07-24' },
+    { id: 'natwc2n3rjg', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - After Love (Live Session)', kind: 'video', date: '2026-07-13' },
+    { id: 'lGl_vyoYoGo', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - After Love (Official Visualizer)', kind: 'video', date: '2026-07-03' },
+    { id: 'pLmsvejt9RU', artist: 'Satine', chan: 'Satine Wallé', title: 'Satine - anomalisa (Clip Officiel)', kind: 'video', date: '2026-06-25' },
+    { id: 'Ag8HzG03Gls', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - CAPABLE MAN (Official Video)', kind: 'video', date: '2026-06-12' },
+    { id: '-PO6RUz0F6M', artist: 'Mitty', chan: 'Mitty', title: 'internet lyrics video', kind: 'video', date: '2026-04-13' },
+    { id: 'McsEdQeKB4U', artist: 'Mitty', chan: 'Mitty', title: 'internet -Mitty', kind: 'video', date: '2026-04-07' },
+    { id: 'xMLhrEj2I90', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - Insomnie (Official video)', kind: 'video', date: '2025-06-12' },
+    { id: '7JiRcfbOpxg', artist: 'Satine', chan: 'Satine Wallé', title: 'Satine - 320 (Clip Officiel)', kind: 'video', date: '2025-05-30' },
+    { id: '09EJfxovXCM', artist: 'Satine', chan: 'Satine Wallé', title: 'Satine - Ohoui! (Visualizer)', kind: 'video', date: '2025-05-10' },
+    { id: '8iR1TS1y7Cw', artist: 'Filiz', chan: 'Filiz', title: 'Filiz - 5 MINUTES (Official audio)', kind: 'video', date: '2025-04-30' },
+    { id: 'cQhWiaAT-do', artist: 'Satine', chan: 'Satine Wallé', title: 'Satine - Le monde est à nous (Audio officiel)', kind: 'video', date: '2025-03-20' },
+    { id: 'BAMnMUXJf-M', artist: 'Filiz', chan: 'Filiz', title: 'FILIZ - PANAME REND FOU (Official video)', kind: 'video', date: '2024-12-27' },
+    { id: 'Ah9xfmQ1yzA', artist: 'Satine', chan: 'Satine Wallé', title: 'Satine - L\'idée de toi (Visualizer)', kind: 'video', date: '2024-10-15' },
+    { id: 'UGFjube-Raw', artist: 'Satine', chan: 'Satine Wallé', title: 'Satine - Nique le champagne (Clip officiel)', kind: 'video', date: '2024-09-04' },
+    { id: '4BR5OE9P2Yc', artist: 'Satine', chan: 'Satine Wallé', title: 'Satine - Nique le champagne (Audio officiel)', kind: 'video', date: '2024-07-12' },
+    { id: 'EjScfw7B0m0', artist: 'Filiz', chan: 'Filiz', title: 'FILIZ - Tissu (Official video)', kind: 'video', date: '2024-06-07' },
+    { id: 'w3dLTC_Nwi0', artist: 'Satine', chan: 'Satine Wallé', title: 'Satine - C\'est toi (Clip officiel)', kind: 'video', date: '2024-04-19' },
+    { id: 'voz__XIAOUY', artist: 'Satine', chan: 'Satine Wallé', title: 'Un quart d\'heure - Satine (Paroles/Lyrics)', kind: 'video', date: '2023-05-24' },
+    { id: 'COzFTMxT4lg', artist: 'Filiz', chan: 'Filiz', title: 'FILIZ - Kenza (Official Video)', kind: 'video', date: '2023-02-24' },
+    { id: 'mIWeXdDn0-Q', artist: 'Filiz', chan: 'Filiz', title: 'FILIZ - High Waist (Official Video)', kind: 'video', date: '2023-01-27' },
+    { id: 'uf4hlZynw80', artist: 'Filiz', chan: 'Filiz', title: 'FILIZ - Curtain Bangs (Official Video)', kind: 'video', date: '2022-12-17' },
+    { id: 'UBAVMTuccVI', artist: 'Filiz', chan: 'Filiz', title: 'FILIZ - Le Printemps reviendra (Official Video)', kind: 'video', date: '2022-03-23' },
+  ];
+  /* Vrais Shorts publiés par les trois artistes (mélangés ensuite par date). */
+  var YT_SHORTS = [
+    { id: 'FkzesFvoDSc', artist: 'Filiz', chan: 'Filiz', title: 'LARA DE KATSEYE QUI ME DIT ÇA : 🥹🤍 #katseye #show #filiz #paris #pourtoi', kind: 'short', date: '2026-11-14' },
+    { id: '5jwx4GxuZaE', artist: 'Filiz', chan: 'Filiz', title: 'I\'VE GOT YOU A SURPRISE! #animation #anime #capableman #filiz #foryou', kind: 'short', date: '2026-11-03' },
+    { id: 'UwGa-UeN7GI', artist: 'Filiz', chan: 'Filiz', title: 'I FLOPED THIS TREND 😭 #metro #paname #filiz #foryou', kind: 'short', date: '2026-11-02' },
+    { id: '2D0VTtQlWQo', artist: 'Mitty', chan: 'Mitty', title: 'shot avant la tempête', kind: 'short', date: '2026-10-24' },
+    { id: '8pP-oUQmur0', artist: 'Mitty', chan: 'Mitty', title: ':)', kind: 'short', date: '2026-10-22' },
+    { id: 'l1rvXhmT9Ws', artist: 'Filiz', chan: 'Filiz', title: 'YOU’RE THE ONLY GUY AT THE PARTY… #likethis #woman #filiz #party #foryou', kind: 'short', date: '2026-10-04' },
+    { id: '-yHK3gB6pXU', artist: 'Filiz', chan: 'Filiz', title: 'I\'M RESPONDING TO THE MEAN COMMENTS #skyrock #planeterap #filiz #foryou', kind: 'short', date: '2026-09-28' },
+    { id: 'rsENx_Z9R9o', artist: 'Filiz', chan: 'Filiz', title: 'TYPHEE INVITES ME ON PLANÈTE RAP 😭🤍 #planeterap #paname #typhee #filiz #foryou', kind: 'short', date: '2026-09-26' },
+    { id: '8NDjZkYR4X0', artist: 'Filiz', chan: 'Filiz', title: 'THIS GUY WAS TALKING DOWN TO ME… but… #katseye #paris #filiz #foryou', kind: 'short', date: '2026-09-21' },
+    { id: 'KtOoxGIce9Q', artist: 'Filiz', chan: 'Filiz', title: 'The latest news from the band Katseye?! #katseye #newmembers #paris #filiz #foryou', kind: 'short', date: '2026-09-15' },
+    { id: 'Qyy-Hgf-nDg', artist: 'Filiz', chan: 'Filiz', title: 'T’IMPROVISE AU BERCY DE KATSEYE 🥹 #katseye #paris #likethis #pourtoi', kind: 'short', date: '2026-09-14' },
+    { id: 'wqCe_ZNaFUU', artist: 'Filiz', chan: 'Filiz', title: 'PIANO AT BERCY STATION 🥹 (FOR KATSEYE WSH) #kasteye #paris #filiz #foryou', kind: 'short', date: '2026-09-12' },
+    { id: 'XuDTN4NQ_LI', artist: 'Satine', chan: 'Satine Wallé', title: 'IM PART OF THE LIVING TOMBSTONE LORE NOW :D!! music : pas assez by satine, out 18th september :3!!', kind: 'short', date: '2026-09-12' },
+    { id: '7mG2UAYcrvc', artist: 'Filiz', chan: 'Filiz', title: 'J’CHANTE POUR KATSEYE À PARIS !!! #katseye #paris #filiz #openshow #pourtoi', kind: 'short', date: '2026-09-12' },
+    { id: 'L5z-PqEQlcU', artist: 'Satine', chan: 'Satine Wallé', title: 'qui lui dit???? CLIP DISPO SUR YT DÈS MAINTENANT :3!! et mon projet sort le 18 septembre :D!!!!', kind: 'short', date: '2026-09-10' },
+    { id: 'uDfyhZF_cr4', artist: 'Filiz', chan: 'Filiz', title: 'HAPPY BACK TO SCHOOL 💀🎀 #paname #metro #backtoschool #foryou', kind: 'short', date: '2026-09-03' },
+    { id: 'wC61J0xa92I', artist: 'Filiz', chan: 'Filiz', title: 'GOODBYE VACATION 🥹 #newmusic #mental #fastlife #foryou', kind: 'short', date: '2026-09-01' },
+    { id: 'SJLEWrERIAw', artist: 'Filiz', chan: 'Filiz', title: 'C’EST GNT DE DIRE JTM.. #hommecapable #jtm #crush #pourtoi', kind: 'short', date: '2026-08-25' },
+    { id: 'MFvwIjTyDJM', artist: 'Filiz', chan: 'Filiz', title: 'PEOPLE\'S SMELLS 😭💀 #paname #paris #mall #foryou', kind: 'short', date: '2026-08-25' },
+    { id: 'okYRoCnSjbQ', artist: 'Filiz', chan: 'Filiz', title: 'I\'M FLEEING PARIS (sry) #paris #subway #vacation #august #foryou', kind: 'short', date: '2026-08-21' },
+    { id: 'DeoUfjf3FuA', artist: 'Filiz', chan: 'Filiz', title: 'VOS BADDIES SONT DE RETOURS #likethis #femme #baddies #pourtoi', kind: 'short', date: '2026-08-21' },
+    { id: 'ziRfJamqnXA', artist: 'Filiz', chan: 'Filiz', title: 'JE DÉFILE DEVANT TLM #hommecapable #jtm #crush #pourtoi', kind: 'short', date: '2026-08-17' },
+    { id: 'd3SLP8988RA', artist: 'Filiz', chan: 'Filiz', title: 'I ALMOST VOMITED 😭😫 #detours #looping #roallercoaste #foryou', kind: 'short', date: '2026-08-14' },
+    { id: '5XUO2J7qiY4', artist: 'Filiz', chan: 'Filiz', title: 'SUMMER IN PARIS 🤷🏻‍♀️ #paname #paris #subway #foryou', kind: 'short', date: '2026-08-14' },
+    { id: 'zJ_uDaADjsI', artist: 'Filiz', chan: 'Filiz', title: 'I RELEASED THE SOUNDTRACK FOR A SERIES!! #ost #severance #burnout #foryou', kind: 'short', date: '2026-08-06' },
+    { id: 'YWpPNGrJmXs', artist: 'Filiz', chan: 'Filiz', title: 'SUMMER IN PARIS… #paname #paris #subway #foryou', kind: 'short', date: '2026-08-06' },
+    { id: 'XQVX7W-qMmI', artist: 'Filiz', chan: 'Filiz', title: 'THIS DOG IS A STAR !!! #likethis #slay #dog #dog #foryou', kind: 'short', date: '2026-08-03' },
+    { id: 'T33u2VbLdW8', artist: 'Filiz', chan: 'Filiz', title: 'I’M CRYING DURING THE FILMING 😭 It’s hard to say goodbye #heartbreak #breakup #afterlove #foryou', kind: 'short', date: '2026-08-03' },
+    { id: 'tjWoX7XPox8', artist: 'Filiz', chan: 'Filiz', title: 'J’AI PEUR DU MARIAGE CAR 😭  #hommecapable #jtm #mariage #pourtoi', kind: 'short', date: '2026-08-02' },
+    { id: 'DbX8iQ1k4F8', artist: 'Filiz', chan: 'Filiz', title: 'WE\'RE DANCING WITHOUT MUSIC 💀 (it\'s terrible) dc : @chriskdanse #likethis #woman #dance #foryou', kind: 'short', date: '2026-07-29' },
+    { id: 'CzaoKXImc2A', artist: 'Filiz', chan: 'Filiz', title: 'A PIANIST WHO FLIES?!! 🥹 #piano #fly #intheair #sky #foryou', kind: 'short', date: '2026-07-25' },
+    { id: 'QqY9fxJIFlU', artist: 'Filiz', chan: 'Filiz', title: 'Staying friends with your ex 😔 Is it possible? I personally believe it is. #newmusic #breakup #fr...', kind: 'short', date: '2026-07-15' },
+    { id: 'fakHgBq_76o', artist: 'Filiz', chan: 'Filiz', title: 'I\'M SINGING "AFTER LOVE" live #afterlove #live #session #foryou', kind: 'short', date: '2026-07-13' },
+    { id: '7DwGEQIjuu8', artist: 'Filiz', chan: 'Filiz', title: 'IT\'S DIFFERENT WITHOUT HIM 😔 #newmusic #heartbreak #love #breakup #foryou', kind: 'short', date: '2026-07-11' },
+    { id: 'hjGz9BkdQok', artist: 'Mitty', chan: 'Mitty', title: 'tes mains dans mes cheveux ❤️#musique #love', kind: 'short', date: '2026-06-20' },
+    { id: '8p3YtmtbxWg', artist: 'Mitty', chan: 'Mitty', title: '💔#music #musique #rupture', kind: 'short', date: '2026-06-18' },
+    { id: 'VlUAZcmHGN4', artist: 'Mitty', chan: 'Mitty', title: 'trop hâte ❤️❤️❤️ lien en bio #musique', kind: 'short', date: '2026-05-07' },
+    { id: '1ZWu3-RWIHc', artist: 'Mitty', chan: 'Mitty', title: '🙇‍♀️❤️ #musique', kind: 'short', date: '2026-05-06' },
+    { id: '7C2R-Bk9uuw', artist: 'Mitty', chan: 'Mitty', title: 'j’apprends à utiliser mon OP1 #musique', kind: 'short', date: '2026-05-03' },
+    { id: 'nn6zTLTVFTk', artist: 'Mitty', chan: 'Mitty', title: '❤️❤️ #musique', kind: 'short', date: '2026-04-30' },
+    { id: 'XvhY3dW-Jhg', artist: 'Mitty', chan: 'Mitty', title: 'les taches, le 08 mai #musique', kind: 'short', date: '2026-04-26' },
+    { id: '0Vednj9BSc0', artist: 'Mitty', chan: 'Mitty', title: 'les taches, mon nouveau son bientôt dispo !!!', kind: 'short', date: '2026-04-22' },
+    { id: 'I2x4cXLAtwU', artist: 'Mitty', chan: 'Mitty', title: 'prochain son…..? #musique #french #chanson #lyrics #music', kind: 'short', date: '2026-04-13' },
+    { id: 'pyRM2px_SS4', artist: 'Mitty', chan: 'Mitty', title: 'internet disponible sur toutes les plateformes :)', kind: 'short', date: '2026-04-10' },
+    { id: 'sRupTtcDmrg', artist: 'Mitty', chan: 'Mitty', title: 'mon son internet dispo partout !     lien en bio', kind: 'short', date: '2026-04-09' },
+    { id: '2w3BJPUAsH8', artist: 'Mitty', chan: 'Mitty', title: 'internet, dispo sur toutes les plateformes :)', kind: 'short', date: '2026-04-07' },
   ];
 
   var ARTISTS = ['Satine', 'Mitty', 'Filiz', 'Donnelli', 'Axel Logan', 'Antoine Bertin', 'Théo Tanneau'];
@@ -7575,7 +7658,11 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   function all() {
     var seen = {}, out = [];
     YT_SEED.concat(store.vids).forEach(function (v) { if (v && v.id && !seen[v.id]) { seen[v.id] = 1; out.push(v); } });
-    return out;
+    /* fil d'accueil : toutes les vidéos mélangées, de la plus récente à la plus ancienne */
+    return out.sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+  }
+  function shortsList() {
+    return YT_SHORTS.slice().sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
   }
   function add(id, artist) {
     if (store.vids.some(function (v) { return v.id === id; })) return;
@@ -7608,6 +7695,21 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     }).join('');
   }
   function render() {
+    var ytsBox = document.getElementById('yts');
+    var chips = document.getElementById('y2-chips');
+    if (tab === 'shorts') {
+      body.hidden = true;
+      if (chips) chips.hidden = true;
+      if (ytsBox) { ytsBox.hidden = false; buildShorts(); }
+      var tb = document.getElementById('y2-tabs');
+      if (tb) Array.prototype.forEach.call(tb.querySelectorAll('.y2-tab'), function (b) {
+        b.classList.toggle('on', b.getAttribute('data-tab') === 'shorts');
+      });
+      return;
+    }
+    body.hidden = false;
+    if (chips) chips.hidden = false;
+    if (ytsBox && !ytsBox.hidden) { ytsBox.hidden = true; stopShorts(); }
     var list = all();
     list.forEach(fetchMeta);
     var q = query.toLowerCase().trim();
@@ -7637,6 +7739,58 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     });
   }
 
+  /* -------------------- Shorts -------------------- */
+  function embedShort(id) {
+    return '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(id) +
+      '?autoplay=1&playsinline=1&loop=1&playlist=' + esc(id) +
+      '&controls=0&modestbranding=1&rel=0&iv_load_policy=3&fs=0" title="Short YouTube" ' +
+      'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" ' +
+      'allowfullscreen playsinline></iframe>';
+  }
+  var ytsBuilt = false, ytsObs = null;
+  function stopShorts() {
+    var box = document.getElementById('yts');
+    if (!box) return;
+    Array.prototype.forEach.call(box.querySelectorAll('.yts-holder'), function (h) { h.innerHTML = ''; });
+  }
+  function buildShorts() {
+    var box = document.getElementById('yts');
+    if (!box) return;
+    var list = shortsList();
+    if (ytsBuilt && box.querySelector('.yts-item')) return;
+    box.innerHTML = '<div class="yts-scroll" id="yts-scroll">' + list.map(function (v) {
+      return '<div class="yts-item" data-id="' + esc(v.id) + '">' +
+        '<div class="yts-holder"></div>' +
+          '<div class="yts-rail">' +
+          '<button class="yts-act" type="button" data-ytlike="' + esc(v.id) + '" aria-label="J’aime">♥</button>' +
+          '<button class="yts-act" type="button" aria-label="Commentaires">💬</button>' +
+          '<button class="yts-act" type="button" aria-label="Partager">↗</button>' +
+          '<a class="yts-act" href="https://www.youtube.com/shorts/' + esc(v.id) + '" target="_blank" rel="noopener" aria-label="Ouvrir sur YouTube">▶</a>' +
+        '</div>' +
+        '<div class="yts-meta"><b><span class="yts-av">' + esc((v.chan || v.artist || 'Y').charAt(0)) + '</span>@' +
+          esc((v.chan || v.artist || '').toLowerCase().replace(/[^a-z0-9]/g, '')) + '</b>' +
+          '<span class="yts-cap">' + esc(v.title) + '</span>' +
+          '<span class="yts-sub">S’abonner</span></div>' +
+        '</div>';
+    }).join('') + '</div>';
+    var scroll = box.querySelector('.yts-scroll');
+    var items = Array.prototype.slice.call(box.querySelectorAll('.yts-item'));
+    if (ytsObs) ytsObs.disconnect();
+    ytsObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var it = e.target, holder = it.querySelector('.yts-holder');
+        if (e.isIntersecting && e.intersectionRatio > 0.65) {
+          if (!holder.querySelector('iframe')) holder.innerHTML = embedShort(it.dataset.id);
+        } else if (holder.querySelector('iframe')) {
+          holder.innerHTML = '';          /* on coupe le son des Shorts hors écran */
+        }
+      });
+    }, { root: scroll, threshold: [0, 0.65, 1] });
+    items.forEach(function (it) { ytsObs.observe(it); });
+    ytsBuilt = true;
+    if (scroll) scroll.scrollTop = 0;
+  }
+
   var chipsEl = document.getElementById('y2-chips');
   if (chipsEl) chipsEl.addEventListener('click', function (e) {
     var b = e.target.closest('[data-chip]'); if (!b) return;
@@ -7649,8 +7803,9 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   if (tabsEl) tabsEl.addEventListener('click', function (e) {
     var b = e.target.closest('[data-tab]'); if (!b) return;
     var t = b.getAttribute('data-tab');
-    if (t === 'home') { tab = 'home'; chip = 'Tout'; query = ''; }
-    else if (t === 'lib') { tab = 'lib'; }
+    if (t === 'home') { tab = 'home'; chip = 'Tout'; query = ''; stopShorts(); }
+    else if (t === 'lib') { tab = 'lib'; stopShorts(); }
+    else if (t === 'shorts') { tab = 'shorts'; query = ''; }
     else return;
     render();
   });
@@ -7658,6 +7813,14 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   body.addEventListener('click', function (e) {
     var b = e.target.closest('[data-v]');
     if (b) watch(b.getAttribute('data-v'));
+  });
+  /* quitter l'app coupe la lecture des Shorts */
+  document.addEventListener('app:screen', function (e) {
+    if (e.detail !== 'yt') stopShorts();
+  });
+  document.getElementById('yts') && document.getElementById('yts').addEventListener('click', function (e) {
+    var l = e.target.closest('[data-ytlike]');
+    if (l) l.classList.toggle('on');
   });
   document.getElementById('yt-searchbtn').addEventListener('click', function () {
     var yt = document.querySelector('.yt');
