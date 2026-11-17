@@ -108,6 +108,7 @@
       [1760, 2093, 1760].forEach(function (f, i) { tone(f, 0.05, 'square', 0.035, 0, 0.56 + i * 0.07); });   /* hé hé hé */
       tone(160, 0.25, 'sine', 0.08, 420, 0.8);                      /* boing */
     },
+    clink: function () { tone(1900, 0.05, 'square', 0.02); tone(1400, 0.08, 'triangle', 0.02, 0, 0.05); },
     crack: function () { noise(0.12, 0.05, 2500); tone(240, 0.1, 'square', 0.03, 140); },
     geyser: function () { noise(0.35, 0.04, 800); },
     secret: function () { [784, 988, 1175, 1568].forEach(function (f, i) { tone(f, 0.1, 'triangle', 0.045, 0, i * 0.06); }); },
@@ -258,7 +259,7 @@
       var n2 = 0; while (cx2 + n2 < L.w && L.t[cy * L.w + cx2 + n2] === CRUMB) n2++;
       crumbs.push({ x: cx2, y: cy, n: n2, st: 'ok', t: 0 });
     }
-    fakes = []; L.chase = D.chase ? { x0: D.chase.x0 * T, x1: D.chase.x1 * T, done: false, on: false } : null;
+    fakes = []; slotCache = {}; L.chase = D.chase ? { x0: D.chase.x0 * T, x1: D.chase.x1 * T, done: false, on: false } : null;
     vdoors = [];
     Object.keys(vCols).forEach(function (x) {
       var ys = vCols[x].sort(function (a, b) { return a - b; });
@@ -280,6 +281,7 @@
       movers.push({ x0: mv.x * T, y0: mv.y * T, w: mv.w * T, dx: mv.dx * T, dy: mv.dy * T, period: mv.period, x: mv.x * T, y: mv.y * T, vx: 0, vy: 0, ph: 0 });
     });
     L.spawn = spawn; L.exit = exit; L.start = { x: spawn.x, y: spawn.y };
+    genAmbient(i);
     L.ticketsTotal = 0;
     prerender();
   }
@@ -357,7 +359,7 @@
     G.time += dt; stats.time += dt;
     var p = P;
     /* plateformes et trains d'abord : on sait ce qui porte le joueur */
-    updateMovers(dt); updateTrains(dt); updateGates(dt); updateDoors(dt); updateVDoors(dt); updatePP(dt); musicTempo(dt); updateNew(dt);
+    updateMovers(dt); updateTrains(dt); updateGates(dt); updateDoors(dt); updateVDoors(dt); updatePP(dt); musicTempo(dt); updateNew(dt); updateAmbient(dt);
 
     var dir = (K.r ? 1 : 0) - (K.l ? 1 : 0); if (touchDir) dir = touchDir;
     var maxV = 112, accel = p.ground ? 1250 : 900, fric = p.ground ? 1500 : 420;
@@ -624,6 +626,173 @@
       }
     });
   }
+  /* ---------- la vie des quais (purement décoratif : aucune collision) ----------
+     souris qui se cachent dans leurs trous, petit rat gourmand sur la poubelle, journaux et canettes
+     qui bougent quand on passe, distributeur qui lâche une canette, néon qui grésille, panneaux. */
+  var amb = [], mice = [];
+  function genAmbient(seed) {
+    amb = []; mice = [];
+    var r = seed * 9301 + 49297;
+    function rnd() { r = (r * 9301 + 49297) % 233280; return r / 233280; }
+    if (L.d.vertical) return;
+    var avoid = {};
+    for (var y = 0; y < L.h; y++) for (var x = 0; x < L.w; x++) { var c = L.d.map[y][x]; if ('HKES|VN'.indexOf(c) >= 0) for (var d = -3; d <= 3; d++) avoid[x + d] = 1; }
+    escs.forEach(function (e) { for (var x = Math.floor(e.ax / T) - 2; x <= Math.ceil(e.bx / T) + 2; x++) avoid[x] = 1; });
+    function floorAt(x, rows) {
+      var gy = groundY(x); if (gy >= L.h * T) return null;
+      var ty = gy / T;
+      if (tileAt(x, ty) !== SOLID || tileAt(x + 1, ty) !== SOLID) return null;
+      for (var k = 1; k <= (rows || 2); k++) if (tileAt(x, ty - k) !== E_ || tileAt(x + 1, ty - k) !== E_) return null;
+      return gy;
+    }
+    /* emplacements des affiches (pour ne jamais mettre un objet haut devant Filiz) */
+    var posterX = [];
+    if (!FX[L.theme] && L.theme !== 'viaduc' && L.theme !== 'nordsud' && L.theme !== 'cuivre') {
+      for (var cx = 0; cx < L.w; cx += 14) { var gy0 = groundY(cx + 4); if (gy0 < L.h * T && (cx / 14) % 2 === 0) { var a = posterSlot(cx, gy0, 60, 80, 20, 10); if (a !== null) posterX.push([a - 6, a + 66]); } }
+    }
+    if (L.theme === 'l14') for (var cx2 = 0; cx2 < L.w; cx2 += 14) { var g2 = groundY(cx2 + 4); if (g2 < L.h * T) { var a2 = posterSlot(cx2, g2, 36, 76, 18, 150); if (a2 !== null) posterX.push([a2 - 6, a2 + 42]); } }
+    function clearOfPosters(px0, px1) { return !posterX.some(function (q) { return px1 > q[0] && px0 < q[1]; }); }
+    var LIT = ['news', 'can', 'cup', 'flyer', 'news', 'can'];
+    for (var x = 3; x < L.w - 3; x++) {
+      if (avoid[x]) continue;
+      var gy = floorAt(x); if (gy === null) continue;
+      var u = rnd();
+      /* panneau mural (sortie / correspondance), là où le mur est libre */
+      if (rnd() < 0.05 && !wallBusy(x * T - 4, gy - 70, x * T + 26, gy - 46) && clearOfPosters(x * T - 4, x * T + 26)) amb.push({ k: 'wsign', x: x * T, y: gy - 64, t: 0, v: Math.floor(rnd() * 3) });
+      if (u < 0.15) amb.push({ k: LIT[Math.floor(rnd() * LIT.length)], x: x * T + 3 + rnd() * 9, y: gy, ox: 0, oy: 0, vx: 0, t: 0, flip: rnd() < .5 });
+      else if (u < 0.2 && floorAt(x, 3) !== null && floorAt(x + 1, 3) !== null && clearOfPosters(x * T - 4, x * T + 24)) {
+        var kk = ['bin', 'vend', 'sign', 'bin', 'plant', 'vend'][Math.floor(rnd() * 6)];
+        var o = { k: kk, x: x * T + 2, y: gy, t: rnd() * 5, rat: kk === 'bin' && rnd() < 0.45 };
+        amb.push(o); x += 4;
+      } else if (u < 0.245) {
+        mice.push({ hx: x * T + 8, y: gy, x: x * T + 8, st: 'out', t: rnd() * 3, face: rnd() < .5 ? -1 : 1, hid: 0 });
+        x += 6;
+      }
+    }
+    /* un néon qui grésille, un par station */
+    var nx = Math.floor(L.w * (0.3 + rnd() * 0.4)), ngy = groundY(nx);
+    if (ngy < L.h * T) amb.push({ k: 'tube', x: nx * T, y: ngy - 6 * T - 2, t: 0 });
+  }
+  function updateAmbient(dt) {
+    var p = P, pcx = p.x + p.w / 2, near2 = function (x, y, d) { return Math.abs(pcx - x) < d && Math.abs(p.y + p.h - y) < 24; };
+    amb.forEach(function (o) {
+      o.t += dt;
+      if (o.k === 'news' || o.k === 'flyer') {          /* il s'envole un peu quand on passe en courant */
+        if (near2(o.x, o.y, 12) && Math.abs(p.vx) > 70 && o.oy === 0) { o.vy = -55 - Math.random() * 25; o.vx = p.vx * 0.35; }
+        if (o.vy !== undefined && (o.oy < 0 || o.vy < 0)) { o.vy += 140 * dt; o.oy = Math.min(0, o.oy + o.vy * dt); o.ox += o.vx * dt; o.vx *= Math.pow(0.4, dt); if (o.oy === 0) o.vy = undefined; }
+      } else if (o.k === 'can' || o.k === 'cup') {      /* un petit coup de pied */
+        if (near2(o.x, o.y, 7) && Math.abs(p.vx) > 30 && Math.abs(o.vx) < 5) { o.vx = p.vx * 0.9; sfx('clink'); }
+        if (Math.abs(o.vx) > 1) { o.ox += o.vx * dt; o.rot = (o.rot || 0) + o.vx * dt * 0.3; o.vx *= Math.pow(0.12, dt); var tx = Math.floor((o.x + o.ox) / T); if (tileAt(tx, o.y / T - 1) !== E_ || tileAt(tx, o.y / T) === E_) { o.vx = -o.vx * 0.5; o.ox += o.vx * dt * 2; } } else o.vx = 0;
+      } else if (o.k === 'vend') {                       /* rester devant : clonk, une canette tombe */
+        if (near2(o.x + 8, o.y, 14) && p.ground && Math.abs(p.vx) < 10) { o.stay = (o.stay || 0) + dt; if (o.stay > 1.1 && !o.gave) { o.gave = true; o.drop = 0.01; sfx('clink'); floatTxt(o.x + 8, o.y - 30, 'Clonk ! ♡', '#FFFFFF', 1); } }
+        else o.stay = 0;
+        if (o.drop) { o.drop += dt; if (o.drop > 0.5) { amb.push({ k: 'can', x: o.x + 8, y: o.y, ox: 0, oy: 0, vx: 40, t: 0 }); o.drop = 0; } }
+        if (o.gave && !near2(o.x + 8, o.y, 60)) o.gave = false;
+      } else if (o.k === 'bin' && o.rat) {               /* le rat gourmand plonge dans la poubelle */
+        if (near2(o.x + 6, o.y, 46)) { if (!o.ratIn) { o.ratIn = 1; o.pop = 0; } } else if (o.ratIn) { o.ratIn += dt; if (o.ratIn > 1.8) { o.ratIn = 0; o.pop = 0.001; } }
+        if (o.pop !== undefined && o.pop < 1 && !o.ratIn) o.pop = Math.min(1, o.pop + dt * 3);
+      }
+    });
+    mice.forEach(function (m) {
+      m.t += dt;
+      var dpl = Math.abs(pcx - m.x), sameLevel = Math.abs(p.y + p.h - m.y) < 30;
+      if (m.st === 'out') {
+        if (dpl < 64 && sameLevel) { m.st = 'flee'; m.face = m.hx > m.x ? 1 : m.hx < m.x ? -1 : (pcx > m.x ? -1 : 1); }
+        else if (m.t > 2 + (m.hx % 3)) { m.t = 0; m.tx = m.hx + (Math.random() - .5) * 40; m.st = 'trot'; }
+      } else if (m.st === 'trot') {
+        var d = m.tx - m.x; m.face = d > 0 ? 1 : -1; m.x += m.face * 30 * dt;
+        if (Math.abs(d) < 2 || m.t > 2) { m.st = 'out'; m.t = 0; }
+        if (dpl < 64 && sameLevel) m.st = 'flee';
+      } else if (m.st === 'flee') {                  /* elle file dans son trou */
+        var dh = m.hx - m.x; m.face = dh >= 0 ? 1 : -1; m.x += m.face * 120 * dt;
+        if (Math.abs(dh) < 3) { m.x = m.hx; m.st = 'hidden'; m.t = 0; }
+      } else if (m.st === 'hidden') {
+        if (dpl > 110 && m.t > 1.5) { m.st = 'peek'; m.t = 0; }
+      } else if (m.st === 'peek') {
+        if (dpl < 64 && sameLevel) { m.st = 'hidden'; m.t = 0; }
+        else if (m.t > 1.2) { m.st = 'out'; m.t = 0; }
+      }
+    });
+  }
+  function drawAmbient() {
+    var x0 = cam.x - 30, x1 = cam.x + viewW() + 30;
+    /* trous de souris au pied du mur */
+    mice.forEach(function (m) {
+      if (m.hx < x0 || m.hx > x1) return;
+      ctx.fillStyle = 'rgba(20,16,30,.75)'; ctx.beginPath(); ctx.arc(m.hx, m.y, 4, Math.PI, 0); ctx.fill();
+    });
+    amb.forEach(function (o) {
+      if (o.x < x0 || o.x > x1) return;
+      var x = Math.round(o.x + (o.ox || 0)), y = Math.round(o.y + (o.oy || 0));
+      if (o.k === 'news') {
+        px(x - 5, y - 2, 10, 2, '#E9E4D6'); px(x - 4, y - 2, 3, 1, '#8A8F96'); px(x + 1, y - 2, 3, 1, '#8A8F96');
+        if (o.oy < 0) { px(x - 5, y - 4, 10, 1, '#F2EEE3'); }
+      } else if (o.k === 'flyer') {
+        px(x - 3, y - 1, 6, 1, '#FF8FB1'); px(x - 2, y - 2, 4, 1, '#FFD6E6');
+      } else if (o.k === 'can') {
+        ctx.save(); ctx.translate(x, y - 2); ctx.rotate(o.rot || 0);
+        px(-2, -1.5, 5, 3, '#E3312D'); px(-2, -1.5, 5, 1, '#F2F2F2'); px(2, -1, 1, 2, '#B9BEC6'); ctx.restore();
+      } else if (o.k === 'cup') {
+        ctx.save(); ctx.translate(x, y - 2); ctx.rotate(o.rot || 0);
+        px(-2, -2, 4, 4, '#FFFFFF'); px(-2, -1, 4, 1, '#3FA7D6'); px(-1, -3, 2, 1, '#C9CED6'); ctx.restore();
+      } else if (o.k === 'bin') {
+        /* poubelle parisienne : cerceau vert, sac transparent */
+        px(x + 5, y - 22, 2, 22, '#2F5D46');
+        ctx.fillStyle = 'rgba(190,230,200,.55)'; ctx.fillRect(x, y - 16, 12, 14); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(x + 1, y - 15, 2, 12);
+        px(x - 1, y - 18, 14, 2, '#2F5D46'); px(x + 3, y - 10, 3, 2, '#E9E4D6'); px(x + 7, y - 7, 3, 3, '#E3312D');
+        if (o.rat) {
+          var pop = o.ratIn ? 0 : (o.pop === undefined ? 1 : o.pop), hy = y - 18 - Math.round(7 * pop);
+          if (pop > 0.05) {
+            ctx.save(); ctx.beginPath(); ctx.rect(x - 4, y - 40, 22, 22); ctx.clip();
+            px(x + 2, hy, 8, 6, '#B9B4C9'); px(x + 2, hy - 2, 2, 2, '#FFB3D1'); px(x + 8, hy - 2, 2, 2, '#FFB3D1');
+            px(x + 4, hy + 2, 1, 1, '#1D1D24'); px(x + 7, hy + 2, 1, 1, '#1D1D24'); px(x + 5, hy + 4, 2, 1, '#FF8FB1');
+            if (Math.floor(G.t * 4) % 2) px(x + 10, hy + 3, 3, 2, '#E7A04E');            /* il grignote un bout de croissant */
+            ctx.restore();
+          }
+        }
+      } else if (o.k === 'vend') {
+        /* distributeur : façade violette, vitrine éclairée, voyant qui clignote */
+        px(x, y - 30, 16, 30, '#5C2D82'); px(x + 2, y - 27, 9, 16, '#2A1F3D');
+        for (var r2 = 0; r2 < 3; r2++) for (var c2 = 0; c2 < 2; c2++) px(x + 3 + c2 * 4, y - 25 + r2 * 5, 3, 3, ['#E3312D', '#FFCE00', '#38D07A', '#3FA7D6', '#FF8FB1', '#FFFFFF'][(r2 * 2 + c2) % 6]);
+        px(x + 12, y - 25, 2, 6, '#C9CED6'); px(x + 3, y - 8, 10, 3, '#1D1D24');
+        px(x + 12, y - 16, 2, 2, Math.floor(o.t * 2) % 2 ? '#38D07A' : '#0E3A22');
+        ctx.fillStyle = 'rgba(180,140,255,.12)'; ctx.fillRect(x - 2, y - 32, 20, 32);
+      } else if (o.k === 'sign') {
+        /* panneau sur pied : sortie / correspondance */
+        px(x + 7, y - 20, 2, 20, '#5E6A63');
+        px(x, y - 26, 16, 8, (o.x / T | 0) % 2 ? '#1F3B7A' : '#2F7D5B');
+        px(x + 2, y - 23, 7, 1, '#FFFFFF'); px(x + 11, y - 24, 3, 1, '#FFFFFF'); px(x + 13, y - 23, 1, 1, '#FFFFFF'); px(x + 11, y - 22, 3, 1, '#FFFFFF');
+      } else if (o.k === 'plant') {
+        px(x + 2, y - 7, 9, 7, '#C98A4E'); px(x + 2, y - 7, 9, 1, '#E7B07A');
+        px(x + 3, y - 15, 3, 8, '#59CD90'); px(x + 6, y - 18, 3, 11, '#3FA36B'); px(x + 8, y - 13, 3, 6, '#59CD90');
+      } else if (o.k === 'wsign') {
+        /* plaque émaillée bleue : flèche de sortie, correspondance ou pictogramme escalier */
+        px(x, y, 22, 10, '#1F3B7A'); px(x + 1, y + 1, 20, 1, 'rgba(255,255,255,.35)');
+        ctx.fillStyle = '#FFFFFF';
+        if (o.v === 0) { px(x + 4, y + 4, 9, 2, '#FFFFFF'); px(x + 12, y + 2, 2, 6, '#FFFFFF'); px(x + 14, y + 3, 1, 4, '#FFFFFF'); px(x + 15, y + 4, 1, 2, '#FFFFFF'); }
+        else if (o.v === 1) { ctx.beginPath(); ctx.arc(x + 6, y + 5, 3, 0, 7); ctx.fill(); px(x + 11, y + 3, 8, 1, '#FFFFFF'); px(x + 11, y + 6, 6, 1, '#FFFFFF'); px(x + 5, y + 4, 2, 2, L.d.color); }
+        else { for (var st2 = 0; st2 < 4; st2++) px(x + 4 + st2 * 3, y + 7 - st2 * 1.5, 3, 1.5, '#FFFFFF'); px(x + 17, y + 2, 2, 6, '#FFFFFF'); }
+      } else if (o.k === 'tube') {
+        var on = !(Math.floor(o.t * 14) % 17 === 0 || (o.t % 6 > 5.4 && Math.floor(o.t * 20) % 2));
+        px(x, y, 40, 3, '#C9CED6');
+        ctx.fillStyle = on ? 'rgba(255,255,235,.95)' : 'rgba(120,120,110,.8)'; ctx.fillRect(x + 2, y + 1, 36, 1);
+        if (on) { ctx.fillStyle = 'rgba(255,255,220,.10)'; ctx.fillRect(x - 10, y + 3, 60, 24); }
+      }
+    });
+    /* les souris (grises, oreilles roses, petite queue) */
+    mice.forEach(function (m) {
+      if (m.x < x0 || m.x > x1 || m.st === 'hidden') return;
+      var x = Math.round(m.x), y = m.y, f = m.face, run = (m.st === 'flee' || m.st === 'trot') && Math.floor(G.t * 16) % 2;
+      if (m.st === 'peek') { px(x - 2, y - 3, 4, 3, '#A8A6B8'); px(x - 2, y - 4, 1, 1, '#FFB3D1'); px(x + 1, y - 4, 1, 1, '#FFB3D1'); px(x - 1, y - 2, 1, 1, '#1D1D24'); px(x + 1, y - 2, 1, 1, '#1D1D24'); return; }
+      px(x - 3, y - 4, 6, 3, '#A8A6B8'); px(f > 0 ? x + 2 : x - 4, y - 4, 2, 2, '#A8A6B8');
+      px(f > 0 ? x + 1 : x - 2, y - 6, 2, 2, '#FFB3D1');
+      px(f > 0 ? x + 3 : x - 4, y - 4, 1, 1, '#1D1D24'); px(f > 0 ? x + 4 : x - 5, y - 3, 1, 1, '#FF8FB1');
+      px(f > 0 ? x - 6 : x + 3, y - 2 - (run ? 1 : 0), 3, 1, '#C98C9C');
+      px(x - 2 + (run ? 1 : 0), y - 1, 1, 1, '#7A788A'); px(x + 1 - (run ? 1 : 0), y - 1, 1, 1, '#7A788A');
+      if (m.st === 'out' && Math.floor(m.t * 3) % 4 === 0) px(f > 0 ? x + 5 : x - 6, y - 4, 1, 1, '#FFFFFF');   /* moustaches qui frémissent */
+    });
+  }
+
   /* ---------- nouvelles mécaniques (stations 6 à 14) ---------- */
   function updateNew(dt) {
     var p = P;
@@ -1915,6 +2084,7 @@
     drawBackground(th);
     worldTx(1);
     drawBackDecor(th);
+    drawAmbient();
     drawTrains(th, true);
     var x0 = Math.floor(cam.x), y0 = Math.floor(cam.y), vw = Math.ceil(viewW()) + 2, vh = Math.ceil(viewH()) + 2;
     var sx = Math.max(0, x0 - 1), sy = Math.max(0, y0 - 1);
@@ -2027,10 +2197,52 @@
     { src: 'images/filiz/filiz-point-ephemere.jpg', w: 36, h: 45 },     /* 720 × 899 (4:5) */
     { src: 'images/filiz/filiz-portrait.jpg', w: 60, h: 40 },           /* 960 × 640 (3:2) */
     { src: 'images/filiz/filiz-sourire.jpg', w: 33, h: 44 },            /* 720 × 960 (3:4) */
-    { selecta: true, w: 60, h: 40 }
+    { selecta: true, src: 'icons/logo-source.png', w: 40, h: 40 }    /* le logo du fond d'écran du téléphone, tel quel */
   ];
   CAMPAIGN.forEach(function (c) { if (c.src) { c.im = new Image(); c.im.decoding = 'async'; c.im.src = c.src; } });
   function campaignAt(cx) { return CAMPAIGN[((cx / 28 | 0) + L.idx) % CAMPAIGN.length]; }
+  /* rien ne doit passer devant une affiche : passerelles, murs, escalators, plateformes mobiles.
+     On cherche la meilleure place dans le panneau de 14 carreaux ; sinon pas d'affiche. */
+  function wallBusy(x0, y0, x1, y1) {
+    for (var ty = Math.floor(y0 / T); ty <= Math.floor((y1 - 1) / T); ty++)
+      for (var tx = Math.floor(x0 / T); tx <= Math.floor((x1 - 1) / T); tx++) if (tileAt(tx, ty) !== E_) return true;
+    for (var i = 0; i < escs.length; i++) { var e = escs[i]; if (x1 > e.ax - 14 && x0 < e.bx + 14 && y1 > Math.min(e.ay, e.by) - 16 && y0 < Math.max(e.ay, e.by) + 12) return true; }
+    for (var j = 0; j < movers.length; j++) { var m = movers[j]; if (x1 > Math.min(m.x0, m.x0 + m.dx) - 4 && x0 < Math.max(m.x0, m.x0 + m.dx) + m.w + 4 && y1 > Math.min(m.y0, m.y0 + m.dy) - 4 && y0 < Math.max(m.y0, m.y0 + m.dy) + 20) return true; }
+    var dyn2 = gates.concat(doors, vdoors);
+    for (var q = 0; q < dyn2.length; q++) { var d = dyn2[q]; if (x1 > d.x - 8 && x0 < d.x + d.w + 8 && y1 > d.y - 12) return true; }
+    for (var k = 0; k < lasers.length; k++) { var l = lasers[k]; if (x1 > l.x - 6 && x0 < l.x + 8) return true; }
+    return false;
+  }
+  var slotCache = {};
+  function posterSlot(cx, gy, w, top, bottom, base) {
+    var key = L.idx + ':' + cx + ':' + w + ':' + base;
+    if (key in slotCache) return slotCache[key];
+    var res = null, tries = [0, 24, -8, 48, 72, 96, 120];
+    for (var i = 0; i < tries.length && res === null; i++) {
+      var ax = cx * T + base + tries[i];
+      if (ax < cx * T || ax + w > (cx + 14) * T) continue;
+      if (!wallBusy(ax - 4, gy - top, ax + w + 4, gy - bottom)) res = ax;
+    }
+    return (slotCache[key] = res);
+  }
+  /* affiche Selecta : le logo du fond d'écran, sur fond rose poudré, comme une vraie campagne */
+  function drawSelectaPoster(c, ax, ay) {
+    var w = 44, h = 52;
+    ctx.fillStyle = 'rgba(40,30,20,.14)'; ctx.fillRect(ax, ay + 2, w + 4, h + 4);
+    ctx.fillStyle = '#6E6A64'; ctx.fillRect(ax - 2, ay - 2, w + 4, h + 4);
+    ctx.fillStyle = '#B9B4AC'; ctx.fillRect(ax - 2, ay - 2, w + 4, 1);
+    ctx.fillStyle = '#F6CADA'; ctx.fillRect(ax, ay, w, h);
+    if (c.im && c.im.complete && c.im.naturalWidth) {
+      ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(c.im, ax + 5, ay + 5, 34, 34);
+      ctx.restore();
+    }
+    ctx.fillStyle = '#1D1D1B'; ctx.fillRect(ax + 5, ay + 43, 34, 1);
+    var lg = ctx.createLinearGradient(0, ay, 0, ay + h);
+    lg.addColorStop(0, 'rgba(255,248,230,.10)'); lg.addColorStop(1, 'rgba(20,10,0,.10)');
+    ctx.fillStyle = lg; ctx.fillRect(ax, ay, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.beginPath(); ctx.moveTo(ax + w * .6, ay); ctx.lineTo(ax + w * .8, ay); ctx.lineTo(ax + w * .4, ay + h); ctx.lineTo(ax + w * .2, ay + h); ctx.closePath(); ctx.fill();
+  }
   /* une affiche dans son cadre : ombre sur la faïence, cadre alu, lumière de la voûte, reflet de la vitre */
   function drawPoster(c, ax, ay) {
     var w = c.w, h = c.h;
@@ -2127,7 +2339,8 @@
         ctx.fillStyle = '#2A2A33'; rr(ctx, cx * T + 8, gy - 62, 44, 18, 2); ctx.fill();
         ctx.fillStyle = '#FFCE00'; ctx.fillRect(cx * T + 12, gy - 57, 3, 3);
         /* écran publicitaire numérique (couloirs de la ligne 14) : fondu entre les visuels portrait */
-        var sx0 = cx * T + 150, sy0 = gy - 70, sw = 36, sh = 48;
+        var sx0 = posterSlot(cx, gy, 36, 76, 18, 150), sy0 = gy - 70, sw = 36, sh = 48;
+        if (sx0 === null) continue;
         ctx.fillStyle = 'rgba(0,0,0,.14)'; rr(ctx, sx0 - 2, sy0, sw + 6, sh + 6, 3); ctx.fill();
         ctx.fillStyle = '#1C1C22'; rr(ctx, sx0 - 3, sy0 - 3, sw + 6, sh + 6, 3); ctx.fill();
         ctx.fillStyle = '#0E0E12'; ctx.fillRect(sx0, sy0, sw, sh);
@@ -2146,17 +2359,14 @@
       var k2 = (cx / 14) % 2;
       if (k2 === 0) {
         var camp = campaignAt(cx), aw = 60;
-        var ax = cx * T + 10, ay = gy - 64;
-        if (camp.selecta) {
-          var pst = POSTERS[3];
-          ctx.fillStyle = '#8A6A4A'; ctx.fillRect(ax - 3, ay - 3, aw + 6, 46);
-          ctx.fillStyle = pst[2]; ctx.fillRect(ax, ay, aw, 40);
-          ctx.fillStyle = pst[1]; ctx.fillRect(ax, ay, aw, 26);
-          ctx.fillStyle = pst[2]; ctx.globalAlpha = .35; ctx.beginPath(); ctx.arc(ax + 42, ay + 14, 10, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
-        } else drawPoster(camp, ax + (aw - camp.w) / 2, gy - 23 - camp.h);
-        /* sièges coque à la couleur de la ligne */
-        ctx.fillStyle = '#5B5A60'; ctx.fillRect(ax - 2, gy - 12, aw + 4, 2);
-        for (var s = 0; s < 5; s++) { ctx.fillStyle = L.d.color; rr(ctx, ax + 2 + s * 12, gy - 18, 9, 7, 2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(ax + 4 + s * 12, gy - 17, 4, 1); ctx.fillStyle = '#3A3A3E'; ctx.fillRect(ax + 6 + s * 12, gy - 11, 1, 11); }
+        var ax = posterSlot(cx, gy, aw, camp.selecta ? 80 : 26 + camp.h, 20, 10), ay = gy - 64;
+        if (ax !== null) {
+          if (camp.selecta) drawSelectaPoster(camp, ax + (aw - 44) / 2, gy - 78);
+          else drawPoster(camp, ax + (aw - camp.w) / 2, gy - 23 - camp.h);
+          /* sièges coque à la couleur de la ligne */
+          ctx.fillStyle = '#5B5A60'; ctx.fillRect(ax - 2, gy - 12, aw + 4, 2);
+          for (var s = 0; s < 5; s++) { ctx.fillStyle = L.d.color; rr(ctx, ax + 2 + s * 12, gy - 18, 9, 7, 2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(ax + 4 + s * 12, gy - 17, 4, 1); ctx.fillStyle = '#3A3A3E'; ctx.fillRect(ax + 6 + s * 12, gy - 11, 1, 11); }
+        }
       }
       /* bandeau lumineux */
       ctx.fillStyle = L.d.color; ctx.globalAlpha = .55; ctx.fillRect(cx * T, wallTop - 4, 14 * T, 3); ctx.globalAlpha = 1;
@@ -2186,13 +2396,7 @@
         continue;
       }
       if (k2 === 0) {
-        if (!campaignAt(cx).selecta) continue;
-        var pst = POSTERS[3];
-        var pp = sxy(cx * T + 14, gy - 60);
-        ctx.font = '900 ' + Math.round(9 * Z) + 'px ' + FONT; ctx.fillStyle = pst[2]; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-        ctx.fillText(pst[0], pp[0], pp[1]);
-        ctx.font = '600 ' + Math.round(4 * Z) + 'px ' + FONT; ctx.fillStyle = pst[1];
-        ctx.fillText(pst[0] === 'SELECTA' ? 'management · publishing' : 'Selecta Agency', pp[0], pp[1] + Math.round(25 * Z));
+        continue;                                   /* l'affiche Selecta montre le vrai logo : pas de texte par-dessus */
       } else {
         plaque(cx * T + 40, gy - 72, L.d.name.toUpperCase(), '#1F3B7A', '#FFFFFF', '#FFFFFF');
       }
@@ -2777,6 +2981,9 @@
     isRunning: function () { return G.state === 'play'; },
     state: function () { return { state: G.state, lv: G.lv, time: G.time, stats: stats, p: P && { x: P.x, y: P.y, vx: P.vx, vy: P.vy, ground: P.ground }, cam: cam, Z: Z }; },
     keys: K, press: function (k) { P_[k] = 1; },
+    slot: function (cx, gy, w, top, bottom, base) { slotCache = {}; return [posterSlot(cx, gy, w, top, bottom, base), wallBusy(cx * T + 6, gy - top - 4, cx * T + 80, gy - bottom), groundY(cx + 4)]; },
+    posters: function () { var out = []; for (var cx = 0; cx < L.w; cx += 28) { var gy = groundY(cx + 4); if (gy >= L.h * T) continue; var c = campaignAt(cx); var a = posterSlot(cx, gy, 60, c.selecta ? 80 : 26 + c.h, 20, 10); out.push([cx, !!c.selecta, a, gy]); } return out; },
+    amb: function () { return { amb: amb.map(function (o) { return [o.k, Math.round(o.x / T), o.y, !!o.rat]; }), mice: mice.map(function (m) { return [m.hx, m.y, m.st]; }) }; },
     dbg: function () { return { gates: gates, ents: ents, G: G, stats: stats, stamps: stamps, items: items, P: P, PP: PP, vdoors: vdoors, escs: escs, crumbs: crumbs, lasers: lasers, geysers: geysers, L: L, music: { rate: musicRate, target: musicTarget, el: music } }; },
     pickpocket: function () { if (G.state === 'play' && !PP) { G.ppDone = true; ppSpawn(); } },
     level: function () { return L; }, teleport: function (x, y) { P.x = x; P.y = y; P.vx = P.vy = 0; cam.x = x - viewW() / 2; clampCam(true); }
