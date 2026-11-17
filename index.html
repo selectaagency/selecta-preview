@@ -6226,6 +6226,23 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     if (old) old.parentNode.removeChild(old);
 
     var box = hours.getBoundingClientRect();
+    var firstB = items[0].querySelector('b');
+    /* La bande n'est pas encore affichée (écran masqué) : on ne trace pas,
+       sinon la courbe se retrouve collée sur la ligne des pourcentages. */
+    if (box.width < 40 || !firstB || firstB.getBoundingClientRect().height < 6) return;
+    /* Redessin au défilement horizontal : la courbe suit les colonnes. */
+    if (!hours.__curveBound) {
+      hours.__curveBound = true;
+      var rafId = 0;
+      hours.addEventListener('scroll', function () {
+        if (rafId) return;
+        rafId = requestAnimationFrame(function () {
+          rafId = 0;
+          var root = hours.closest('.wx-app');
+          if (root) drawWxCurve(root);
+        });
+      }, { passive: true });
+    }
     var scrollLeft = hours.scrollLeft;
     var pts = items.map(function (it) {
       var b = it.querySelector('b');
@@ -6251,6 +6268,15 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   }
   window.addEventListener('resize', function () {
     var b = document.querySelector('.wx-app'); if (b) drawWxCurve(b);
+  });
+  /* L'écran est masqué quand on le construit : on retrace une fois affiché. */
+  document.addEventListener('app:screen', function (e) {
+    if (e.detail !== 'meteo') return;
+    [120, 400, 900].forEach(function (ms) {
+      setTimeout(function () {
+        var b = document.querySelector('.wx-app'); if (b) drawWxCurve(b);
+      }, ms);
+    });
   });
   wxFetch();
   setInterval(function () { if (Date.now() - WX.at > 1800000) wxFetch(); }, 600000);
@@ -7531,6 +7557,12 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     { id: 'w3dLTC_Nwi0', artist: 'Satine', chan: 'Satine Wallé', title: "Satine - C'est toi (Clip officiel)", date: '2024-04-19' },
     { id: 'voz__XIAOUY', artist: 'Satine', chan: 'Satine Wallé', title: "Un quart d'heure - Satine (Paroles/Lyrics)", date: '2023-05-24' },
     { id: 'hbsQJzw78WU', artist: 'Satine', chan: 'Satine Wallé', title: "Diffusion en direct de Satine Wallé", date: '2016-09-12' },
+    /* Mitty — chaîne officielle : youtube.com/channel/UC9FyvmLDpzwy7I7d3crY-Ww (@mittotoro) */
+    { id: 'McsEdQeKB4U', artist: 'Mitty', chan: 'Mitty', title: 'internet -Mitty' },
+    { id: '-PO6RUz0F6M', artist: 'Mitty', chan: 'Mitty', title: 'internet lyrics video' },
+    { id: 'l1NQdrzUExI', artist: 'Mitty', chan: 'Mitty - Topic', title: 'SHADY' },
+    { id: 'bhmbGoS6y3E', artist: 'Mitty', chan: 'Mitty - Topic', title: 'Apocalypse' },
+    { id: 'EqranB8cRYM', artist: 'Mitty', chan: 'Mitty - Topic', title: 'some more summer' },
     { id: '5jwx4GxuZaE', artist: 'Filiz', chan: 'Filiz', title: "J’VOUS AI FAIT UNE SURPRISE #animation #anime #hommecapable #filiz #pourtoi", date: '2026-11-03' },
     { id: 'aVVM2OL8LW0', artist: 'Filiz', chan: 'Filiz', title: "Homme Capable (Anime Music Video)", date: '2026-11-03' },
     { id: 'UwGa-UeN7GI', artist: 'Filiz', chan: 'Filiz', title: "J’AI FLOP CETTE TREND 😭 #metro #paname #filiz #pourtoi", date: '2026-11-02' },
