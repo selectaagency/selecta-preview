@@ -82,6 +82,10 @@
     return b;
   }
 
+  /* Depuis que le titre et les onglets défilent avec la grille, c'est la page
+     elle-même qui porte le défilement (repli sur l'ancien conteneur). */
+  function scroller() { return $('ph-page') || $('ph-scroll'); }
+
   function renderGrid() {
     var host = $('ph-scroll');
     if (!host) return;
@@ -148,7 +152,7 @@
   function openAt(id) {
     var i = S.list.findIndex(function (m) { return m.id === id; });
     if (i < 0) return;
-    var sc = $('ph-scroll');
+    var sc = scroller();
     if (sc && !S.open) S.scroll = sc.scrollTop;   /* on retient où on en était dans la grille */
     S.index = i; S.open = true;
     view.root.classList.add('on');
@@ -168,7 +172,7 @@
     if (screen && screen.getAttribute('data-screen') !== 'gallery' && typeof global.__open === 'function') {
       global.__open('gallery');
     }
-    var sc = $('ph-scroll');
+    var sc = scroller();
     if (sc && typeof S.scroll === 'number') sc.scrollTop = S.scroll;
   }
 
