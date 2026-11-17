@@ -16,6 +16,14 @@ Ne pas servir avec un serveur mono-thread : la page charge ~40 médias d'un coup
 Un petit serveur multithread est fourni dans `/tmp/serve_selecta.py` (hors projet) —
 le recréer si besoin : `ThreadingHTTPServer` + `request_queue_size = 256`.
 
+## Dépôt et publication
+
+- **GitHub (privé, travail)** : `github.com/selectaagency/selecta-site` — collaborateur : **kecyf** (write).
+- **GitHub Pages (public, aperçu)** : `https://selectaagency.github.io/selecta-preview/`
+  (dépôt miroir `selecta-preview`, branche `main`).
+- **Mettre en ligne une modification** : `./publish.sh "message"` → commit + push privé + push aperçu.
+- **Netlify** pas encore branché (à faire si on veut une URL sur `selecta.agency`).
+
 ## Structure
 
 ```
@@ -68,11 +76,24 @@ Hooks de debug utiles : `window.__open(app)`, `window.__cal`, `window.__APPS`, `
   Le sprite Miku est l'image fournie par l'utilisateur : `images/miku-gag.png`.
 - **Jeu Paname** : rames MF77, plaques de station, carte Navigo, panneau d'attente ;
   musique `sounds/paname-8bit.m4a` (filtrée 8-bit, coupée en pause/menu).
+- **Photos** : tout l'écran défile (titre, onglets et grille) via `#ph-page` — les en-têtes de
+  mois restent collés en haut (`position: sticky`). Ne pas remettre le défilement sur `#ph-scroll`.
+- **Messages** : plus aucun geste maison sur la liste (un ancien « glisser pour retirer »
+  déplaçait les lignes et les faisait se chevaucher). Le défilement est celui du navigateur.
+- **YouTube** : `YT_SEED` (31 vidéos classiques réelles, datées) + `YT_SHORTS` (46 vrais Shorts),
+  triés par `date` décroissante et **mélangés entre artistes**. Seul `.y2-feed` défile
+  (`.yt .app-body { overflow: hidden }`), en-tête et onglets fixes. Onglet Shorts : défilement
+  vertical `scroll-snap`, un seul iframe chargé à la fois (IntersectionObserver), classe
+  `shorts-mode` pour masquer la recherche. Mitty : uniquement « internet » et « internet lyrics ».
+- **Merch** : `exclude: ['poster du dernier clip']` dans `merch-config.js` masque le doublon
+  Shopify ; icône de l'app = `icons/merch-vinter.png`.
+- **Messages** : la conversation s'appelle « Studio Dumora » (id interne `camille` conservé).
+- **Agenda** : 9 dates, dont Mitty le 28/11/2026 à L'Élysée Montmartre (1re partie de Spider Zed).
 
 ## Ce qui reste à faire
 
-1. **Mise en ligne publique stable** (domaine à brancher) — aujourd'hui seulement un tunnel
-   temporaire + serveur local.
+1. **Domaine** : brancher `selecta.agency` sur Netlify ou GitHub Pages (aujourd'hui l'aperçu
+   est en `github.io`).
 2. Sons iOS réels à brancher (`message recu.wav`, `deverouillage.mp3`, `message send.mp3`,
    `keyboard typing.mp3` sont dans ~/Downloads, non intégrés).
 3. Pages légales : champs `[À COMPLÉTER]` (SIRET, adresse, hébergeur) avant publication.
