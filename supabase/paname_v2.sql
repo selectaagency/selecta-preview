@@ -1,5 +1,5 @@
 -- =====================================================================
---  Paname rend fou v2 : 14 stations, chronomètre, classement SPEEDRUN, carte Navigo seule.
+--  Paname rend fou v2 : 12 stations, chronomètre, classement SPEEDRUN, carte Navigo seule.
 --  À exécuter APRÈS classements.sql (il le complète, sans rien effacer).
 --  • stations 0 à 12 (les 5 premières gardent leurs règles d'origine)
 --  • niveau 100 = speedrun de la ligne complète (une seule partie chronométrée)
@@ -33,8 +33,8 @@ $$;
 create or replace function public.pr_rules(p_level int, out tot int, out par int, out mint int)
 language sql immutable set search_path = '' as $$
   select 0,
-         (array[75, 70, 80, 80, 85, 70, 72, 80, 82, 75, 78, 85, 88, 170])[p_level + 1],
-         (array[20, 9, 15, 14, 15, 13, 14, 14, 16, 14, 14, 14, 15, 27])[p_level + 1]
+         (array[75, 80, 70, 80, 85, 70, 72, 80, 78, 85, 88, 170])[p_level + 1],
+         (array[20, 15, 9, 14, 15, 13, 14, 12, 14, 14, 15, 27])[p_level + 1]
 $$;
 
 -- score d'une station, même formule que le jeu (v3 : plus de tickets, une carte Navigo par station,
@@ -58,7 +58,7 @@ returns uuid language plpgsql security definer set search_path = public as $$
 declare t uuid; v_ip text := public.lb_ip();
 begin
   if p_game not in ('320', 'paname') or p_player is null then raise exception 'bad_request'; end if;
-  if p_game = 'paname' and not ((p_level between 0 and 13) or p_level = 100) then raise exception 'bad_level'; end if;
+  if p_game = 'paname' and not ((p_level between 0 and 11) or p_level = 100) then raise exception 'bad_level'; end if;
   if (select count(*) from lb_runs where player = p_player and started_at > now() - interval '10 minutes') >= 30
      or (coalesce(v_ip, '') <> '' and (select count(*) from lb_runs where lb_runs.ip = v_ip and started_at > now() - interval '10 minutes') >= 120) then
     raise exception 'rate_limited';
@@ -92,10 +92,10 @@ begin
     if el < 3 or climbed > el * 800 + 800 or bonus > el * 450 + 3000 or sc > 5000000 then return jsonb_build_object('error', 'implausible'); end if;
 
   elsif r.level = 100 then
-    -- SPEEDRUN : les 14 stations d'une traite, temps total borné par le temps réel du serveur
-    if jsonb_typeof(st -> 'stations') is distinct from 'array' or jsonb_array_length(st -> 'stations') <> 14 then return jsonb_build_object('error', 'implausible'); end if;
+    -- SPEEDRUN : les 12 stations d'une traite, temps total borné par le temps réel du serveur
+    if jsonb_typeof(st -> 'stations') is distinct from 'array' or jsonb_array_length(st -> 'stations') <> 12 then return jsonb_build_object('error', 'implausible'); end if;
     sc := 0; tsum := 0; minsum := 0;
-    for i in 0..13 loop
+    for i in 0..11 loop
       one := pr_station_score(i, st -> 'stations' -> i);
       if one is null then return jsonb_build_object('error', 'implausible'); end if;
       sc := sc + one; tsum := tsum + ((st -> 'stations' -> i) ->> 'time')::numeric; minsum := minsum + (select mint from pr_rules(i));
@@ -176,3 +176,18 @@ revoke all on function public.pr_rules(int) from public, anon, authenticated;
 revoke all on function public.pr_station_score(int, jsonb) from public, anon, authenticated;
 revoke all on function public.lb_top2(text, uuid, text) from public;
 grant execute on function public.lb_top2(text, uuid, text) to anon, authenticated;
+
+
+-- Arts et Métiers devient la 2e station (niveau 1) et Abbesses la 3e (niveau 2) :
+-- on échange une seule fois les scores déjà enregistrés pour ces deux stations.
+create table if not exists public.lb_migrations (name text primary key, done_at timestamptz default now());
+alter table public.lb_migrations enable row level security;
+do $$
+begin
+  if not exists (select 1 from public.lb_migrations where name = 'paname_swap_1_2') then
+    update public.lb_scores set level = 999 where game = 'paname' and level = 1;
+    update public.lb_scores set level = 1 where game = 'paname' and level = 2;
+    update public.lb_scores set level = 2 where game = 'paname' and level = 999;
+    insert into public.lb_migrations(name) values ('paname_swap_1_2');
+  end if;
+end $$;

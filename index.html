@@ -261,6 +261,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .bubble a { color: #7FB0FF; text-decoration: underline; }
 .composer { display: flex; align-items: center; gap: 8px; padding: 8px 14px 4px; }
 .composer input { color: var(--txt); flex: 1; min-height: 38px; padding: 0 14px; border: .5px solid var(--line); border-radius: 19px; background: transparent; color: var(--txt); font: inherit; font-size: 16px; }
+.bubble-status { align-self: flex-end; margin: -2px 6px 4px 0; font-size: 11px; color: var(--muted); }
 .composer button { width: 32px; height: 32px; border-radius: 50%; background: #0A84FF; display: flex; align-items: center; justify-content: center; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
@@ -306,7 +307,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .cal { background: var(--paper); }
 .cal .app-body { padding: 2px 14px 10px; display: flex; flex-direction: column; gap: 10px; }
 .cal-nav { display: flex; align-items: center; justify-content: space-between; }
-.cal-nav button { color: #FF3B30; font-size: 24px; min-height: 36px; padding: 0 8px; line-height: 1; }
+.cal-nav button { color: #FF3B30; font-size: 24px; min-height: 44px; min-width: 44px; padding: 0 8px; line-height: 1; border-radius: 22px; }
+.cal-nav button:active { background: rgba(255,59,48,.1); }
 .cal-month { font-size: 19px; font-weight: 700; letter-spacing: -.3px; }
 .cal-week { display: grid; grid-template-columns: repeat(7, 1fr); font-size: 11px; color: var(--muted); text-align: center; font-weight: 600; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 1px; }
@@ -842,6 +844,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 /* ---------- Plan : carte des concerts ---------- */
 .map2 { position: relative; padding: 0; overflow: hidden; }
 #cmap { position: absolute; inset: 0; background: #EFEFEF; }
+/* pendant le chargement de la carte : un fond de papier quadrillé qui respire, pas un écran vide */
+#cmap.loading { background: #EFEFEF linear-gradient(90deg, rgba(0,0,0,.035) 1px, transparent 1px) 0 0 / 28px 28px,
+  linear-gradient(0deg, rgba(0,0,0,.035) 1px, transparent 1px) 0 0 / 28px 28px; animation: mapWait 1.4s ease-in-out infinite alternate; }
+@keyframes mapWait { from { opacity: .75; } to { opacity: 1; } }
 .leaflet-container { background: #EDEDED; font-family: inherit; }
 .map2-top { position: absolute; top: 52px; left: 0; right: 0; z-index: 500; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
 .map2-round { width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92);
@@ -906,6 +912,31 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .app.open { transform: none; opacity: 1;
   transition: transform .5s cubic-bezier(.32,.72,0,1), opacity .16s ease, border-radius .5s cubic-bezier(.32,.72,0,1); }
 .app:not(.open) { border-radius: 44px; overflow: hidden; }
+/* une app fermée (animation de fermeture finie) n'est plus ni dessinée ni mise en page :
+   ses images ne se chargent qu'à la première ouverture, et l'accueil reste fluide */
+.app.cold { content-visibility: hidden; }
+/* ---------- actions rapides (appui long sur une icône) ---------- */
+.qa-layer { position: absolute; inset: 0; z-index: 40; }
+.qa-dim { position: absolute; inset: 0; background: rgba(20,18,28,.18); -webkit-backdrop-filter: blur(0px); backdrop-filter: blur(0px); opacity: 0; transition: opacity .25s ease, -webkit-backdrop-filter .3s ease, backdrop-filter .3s ease; }
+.qa-layer.on .qa-dim { opacity: 1; -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2); }
+.qa-ico { position: absolute; border-radius: 13.5px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,.28); transform: scale(1); transition: transform .32s cubic-bezier(.2,.9,.3,1.3); pointer-events: none; }
+.qa-ico > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+.qa-ico svg { position: static; width: 60%; height: 60%; }
+.qa-layer.on .qa-ico { transform: scale(1.08); }
+.qa-menu { position: absolute; width: 254px; border-radius: 14px; overflow: hidden; background: rgba(246,245,248,.86); -webkit-backdrop-filter: blur(30px) saturate(1.6); backdrop-filter: blur(30px) saturate(1.6);
+  box-shadow: 0 18px 50px rgba(0,0,0,.28); transform: scale(.4); opacity: 0; transition: transform .34s cubic-bezier(.2,.9,.25,1.15), opacity .18s ease; color: #0B0A10; }
+.qa-layer.on .qa-menu { transform: none; opacity: 1; }
+.qa-item { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; min-height: 46px; padding: 0 16px; border: 0; background: transparent; color: inherit; font: 400 16.5px/1.15 inherit; letter-spacing: -.2px; text-align: left; }
+.qa-item + .qa-item { box-shadow: inset 0 .5px 0 rgba(60,60,67,.24); }
+.qa-item:active { background: rgba(0,0,0,.08); }
+.qa-sep { display: block; height: 8px; background: rgba(60,60,67,.12); }
+.phone:not(.light) .qa-menu { background: rgba(40,40,46,.86); color: #fff; }
+.phone:not(.light) .qa-item + .qa-item { box-shadow: inset 0 .5px 0 rgba(255,255,255,.14); }
+@media (prefers-reduced-motion: reduce) { .qa-menu, .qa-ico, .qa-dim { transition-duration: .01s !important; } }
+/* pendant le glisser vers l'accueil : ombre de carte, comme le multitâche iOS */
+.phone.dragging-app .app.open { box-shadow: 0 30px 60px rgba(0,0,0,.35); }
+.wx-retry { margin-top: 14px; min-height: 40px; padding: 0 18px; border-radius: 20px; border: 0; background: rgba(255,255,255,.22); color: #fff; font: 600 15px/1 inherit; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.wx-retry:active { transform: scale(.96); }
 /* l'accueil recule légèrement quand une app est au premier plan, puis revient en douceur */
 .home { transition: opacity .3s ease, transform .5s cubic-bezier(.32,.72,0,1), filter .5s; }
 .phone:not([data-screen="home"]):not([data-screen="lock"]) .home { transform: scale(.92); filter: blur(2px); }
@@ -937,6 +968,8 @@ input, textarea, .composer input, .cal-form input, .clock-form input, .cmp-field
 
 .bubble a, .bubble-link { color: #0A84FF; text-decoration: underline; word-break: break-all; }
 .phone:not(.light) .bubble a, .phone:not(.light) .bubble-link { color: #4DA3FF; }
+.bubble.arrive { animation: bubIn .32s cubic-bezier(.2,.9,.3,1.2) both; transform-origin: 0 100%; }
+@keyframes bubIn { from { opacity: 0; transform: translateY(8px) scale(.85); } to { opacity: 1; transform: none; } }
 .bubble.typing { display: inline-flex; gap: 4px; align-items: center; padding: 13px 14px; }
 .bubble.typing i { width: 7px; height: 7px; border-radius: 50%; background: #9A9AA0; display: block;
   animation: tdots 1.05s infinite ease-in-out; }
@@ -1168,10 +1201,12 @@ input, textarea, .composer input, .cal-form input, .clock-form input, .cmp-field
 .ph-tabs button { flex: 1; min-height: 32px; border-radius: 9px; font-size: 13.5px; font-weight: 600;
   color: var(--txt); background: var(--card2); }
 .ph-tabs button[aria-selected="true"] { background: var(--txt); color: var(--ink); }
+/* rien ne défile visiblement sous la barre d'état : fondu sur sa hauteur */
+html:not(.ipad) .ph-page { -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 38px, #000 56px); mask-image: linear-gradient(to bottom, transparent 0, transparent 38px, #000 56px); }
 .ph-page { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain; touch-action: pan-y; scroll-behavior: auto; }
 .ph-scroll { padding-bottom: 12px; }
-.ph-month { position: sticky; top: 0; z-index: 2; margin: 0; padding: 9px 16px 7px;
+.ph-month { position: relative; z-index: 2; margin: 0; padding: 9px 16px 7px; transition: opacity .12s linear;
   font-size: 15px; font-weight: 700; letter-spacing: -.3px; background: var(--ink);
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .ph-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 0 2px 10px; }
@@ -1697,6 +1732,39 @@ body.piano-wide .lang-out { display: none; }
 .pr-skin.on { background: rgba(255,206,0,.22); box-shadow: inset 0 0 0 1.5px #FFCE00; }
 .pr-skin:disabled { opacity: .4; }
 .pr-row { display: flex; gap: 8px; justify-content: center; }
+/* menu compact : le plan de ligne sur deux colonnes, boutons du bas visibles sans défiler */
+.pr-menu { gap: 8px; }
+.pr-menu .pr-tag { margin: 0; font-size: 12px; }
+.pr-menu .pr-line { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(6, auto); grid-auto-flow: column; padding: 4px 2px; column-gap: 0; }
+.pr-menu .pr-line::before { display: none; }
+.pr-menu .pr-stop { min-height: 40px; gap: 6px; padding: 2px 6px 2px 11px; }
+.pr-menu .pr-stop::after { content: ""; position: absolute; left: 17.5px; top: 0; bottom: 0; width: 3px; background: rgba(255,255,255,.85); z-index: 0; }
+.pr-menu .pr-stop:nth-child(1)::after, .pr-menu .pr-stop:nth-child(7)::after { top: 50%; }
+.pr-menu .pr-stop:nth-child(6)::after, .pr-menu .pr-stop:nth-child(12)::after, .pr-menu .pr-stop:last-child::after { bottom: 50%; }
+.pr-menu .pr-stop .pr-dot { width: 13px; height: 13px; box-shadow: inset 0 0 0 3px #fff; }
+.pr-menu .pr-stop .pr-bullet { transform: scale(.85); flex: none; }
+.pr-menu .pr-sname { display: flex; flex-direction: column; font-size: 12.5px; line-height: 1.12; min-width: 0; }
+.pr-menu .pr-sstars { font-size: 10px; margin-top: 1px; letter-spacing: .04em; }
+.pr-menu .pr-go { min-height: 50px; }
+.pr-duo { display: grid; grid-template-columns: 1.15fr 1fr; gap: 8px; }
+.pr-duo .pr-btn { min-height: 50px; font-size: 14.5px; padding: 0 8px; }
+.pr-duo .pr-btn.ghost { box-shadow: none; }
+.pr-collec { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 14px; background: rgba(18,16,26,.62); }
+.pr-collec .pr-pass { padding: 0; background: none; justify-content: center; font-size: 12px; }
+.pr-collec .pr-pass b { font-size: 15px; }
+.pr-collec .pr-card { width: 24px; height: 15px; }
+.pr-menu .pr-skins { gap: 5px; }
+.pr-menu .pr-skin { height: 28px; padding: 0 8px 0 5px; font-size: 11px; gap: 4px; }
+.pr-menu .pr-skin i { width: 15px; height: 15px; }
+/* petits écrans (iPhone SE…) : tout tient encore sans défiler */
+@media (max-height: 700px) {
+  .pr-menu { gap: 6px; }
+  .pr-menu .pr-titlewrap { transform: scale(.78); margin: -12px 0 -14px; }
+  .pr-menu .pr-stop { min-height: 34px; }
+  .pr-menu .pr-go, .pr-duo .pr-btn { min-height: 44px; }
+  .pr-collec { padding: 6px 8px; gap: 4px; }
+  .pr-menu .pr-row .pr-mini { height: 30px; }
+}
 .pr-mini { height: 32px; padding: 0 14px; border-radius: 16px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.85); font-size: 12px; font-weight: 700; }
 .pr-kick { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 700; color: rgba(255,255,255,.85); }
 .pr-big { text-align: center; font-size: 30px; font-weight: 900; letter-spacing: -.02em; margin-bottom: 6px; }
@@ -1859,7 +1927,7 @@ body.piano-wide .lang-out { display: none; }
 .cal-form { display: flex; gap: 7px; margin-top: 12px; }
 .cal-form input { min-width: 0; min-height: 38px; border-radius: 10px; border: .5px solid var(--line); background: var(--card2); color: var(--txt); font: inherit; font-size: 13.5px; padding: 0 10px; }
 .cal-form input[type="text"] { flex: 1; }
-.cal-form input[type="time"] { flex: 0 0 96px; padding: 0 6px; }
+.cal-form input[type="time"] { flex: 0 0 112px; padding: 0 6px; }
 .cal-form button { flex: 0 0 auto; min-height: 38px; padding: 0 12px; border-radius: 10px; background: #FF3B30; color: #fff; font-size: 13px; font-weight: 700; }
 
 
@@ -2517,7 +2585,14 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 .ar-tile.hot small { opacity: .8; }
 .ar-tile.hot i { opacity: .9; }
 /* DICE : sans billetterie en ligne, on renvoie vers le plan */
-.dice-map { border: 0; font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+/* deux boutons de même famille : « Billets » plein, « Plan » cerclé avec une épingle */
+.phone.light .dice-go { background: #0B0A10; color: #fff; }
+.dice-go:active, .dice-map:active { transform: scale(.95); }
+.dice-map { flex: none; display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 0 13px 0 10px; border: 0; border-radius: 18px;
+  background: transparent; box-shadow: inset 0 0 0 1.2px rgba(127,124,140,.45); color: inherit; font: 700 13px/1 inherit; cursor: pointer; text-decoration: none; }
+.dice-map::before { content: ""; width: 12px; height: 14px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M6 0a5 5 0 0 0-5 5c0 3.6 5 9 5 9s5-5.4 5-9a5 5 0 0 0-5-5zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M6 0a5 5 0 0 0-5 5c0 3.6 5 9 5 9s5-5.4 5-9a5 5 0 0 0-5-5zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z'/%3E%3C/svg%3E") center / contain no-repeat; }
 .sp-fallback { position: absolute; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px;
   padding: 22px 20px; border-radius: 18px; background: #121212; color: #fff; text-decoration: none; text-align: center; z-index: 2; }
 .sp-fallback[hidden] { display: none; }
@@ -2562,7 +2637,6 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 /* iPad : Paname s'ouvre dans une fenêtre large, faite pour un jeu de plateforme */
 .ipad .phone:not(.split):not(.fullwin) .screen.app[data-app="metro"] { width: min(980px, calc(100% - 120px)); margin-left: calc(min(980px, calc(100% - 120px)) / -2); }
 </style>
-<link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
 </head>
 <body>
 
@@ -2608,10 +2682,10 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   </section>
 
   <!-- APPS -->
-  <section class="screen app merch" data-app="merch" aria-label="Merch">
+  <section class="screen app cold merch" data-app="merch" aria-label="Merch">
     <div class="app-body"><div id="mc"></div></div>
   </section>
-  <section class="screen app ph" data-app="gallery" aria-label="Photos">
+  <section class="screen app cold ph" data-app="gallery" aria-label="Photos">
     <div class="app-body">
       <div class="ph-page" id="ph-page">
       <div class="ph-head">
@@ -2665,7 +2739,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour &agrave; l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app art2" data-app="mgmt" aria-label="Artistes">
+  <section class="screen app cold art2" data-app="mgmt" aria-label="Artistes">
     <div class="app-body">
       <div class="ar-top">
         <button type="button" class="ar-chip bk" data-open="home" aria-label="Accueil"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.6 5.4L8 12l6.6 6.6"/></svg></button>
@@ -2680,7 +2754,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 
   
 
-  <section class="screen app plan" data-app="plan" aria-label="Plan">
+  <section class="screen app cold plan" data-app="plan" aria-label="Plan">
     <div class="app-body map2">
       <div id="cmap"></div>
       <div class="map2-top">
@@ -2693,7 +2767,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app cal" data-app="cal" aria-label="Calendrier">
+  <section class="screen app cold cal" data-app="cal" aria-label="Calendrier">
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">Calendrier</span><i></i></header>
     <div class="app-body">
       <div class="cal-nav">
@@ -2708,7 +2782,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app ig" data-app="ig" aria-label="Instagram">
+  <section class="screen app cold ig" data-app="ig" aria-label="Instagram">
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">Instagram</span><i></i></header>
     <div class="app-body ig-body">
       <div class="ig-top">
@@ -2742,7 +2816,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 
   
 
-  <section class="screen app yt" data-app="yt" aria-label="YouTube">
+  <section class="screen app cold yt" data-app="yt" aria-label="YouTube">
     <div class="app-body">
       <div class="y2-top">
         <button class="y2-back" data-open="home" aria-label="Accueil"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -2769,19 +2843,19 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app ytw" data-app="ytwatch" aria-label="Lecture">
+  <section class="screen app cold ytw" data-app="ytwatch" aria-label="Lecture">
     <header class="app-head"><button class="back" data-open="yt"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>YouTube</button><span class="app-title">Lecture</span><i></i></header>
     <div class="app-body" id="ytw-body"></div>
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app igv" data-app="igpost" aria-label="Publication">
+  <section class="screen app cold igv" data-app="igpost" aria-label="Publication">
     <header class="app-head"><button class="back" data-open="ig"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Profil</button><span class="app-title">Publication</span><i></i></header>
     <div class="app-body" id="igv-body"></div>
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app notes" data-app="notes" aria-label="Notes">
+  <section class="screen app cold notes" data-app="notes" aria-label="Notes">
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">Notes</span><i></i></header>
     <div class="app-body">
       <small class="js-date"></small>
@@ -2796,13 +2870,13 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app" data-app="msgs" aria-label="Messages">
+  <section class="screen app cold" data-app="msgs" aria-label="Messages">
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">Messages</span><i></i></header>
     <div class="app-body"><h2>Messages</h2><ul class="conv-list" id="conv-list"></ul></div>
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app" data-app="thread" aria-label="Conversation">
+  <section class="screen app cold" data-app="thread" aria-label="Conversation">
     <header class="app-head"><button class="back" data-open="msgs"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Messages</button><span class="app-title" id="th-name"></span><i></i></header>
     <div class="app-body chat" id="th-chat"></div>
     <form class="composer" id="th-form">
@@ -2813,7 +2887,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app" data-app="msg" aria-label="Messages">
+  <section class="screen app cold" data-app="msg" aria-label="Messages">
     <header class="app-head"><button class="back" data-open="msgs"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Messages</button><span class="app-title">Selecta</span><i></i></header>
     <div class="app-body chat" id="chat">
       <div class="chat-who"><b aria-hidden="true">S</b>Selecta</div>
@@ -2833,14 +2907,14 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">Spotify</span><i></i></header>
     <div class="app-body">
       <!-- Lecteur officiel Spotify : playlist SELECTA AGENCY -->
-      <iframe title="Playlist SELECTA AGENCY sur Spotify" src="https://open.spotify.com/embed/playlist/7dMYV3uIkXFqOYZSfFBjk8?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+      <iframe title="Playlist SELECTA AGENCY sur Spotify" data-src="https://open.spotify.com/embed/playlist/7dMYV3uIkXFqOYZSfFBjk8?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
       <a class="sp-fallback" id="sp-fallback" href="https://open.spotify.com/playlist/7dMYV3uIkXFqOYZSfFBjk8" target="_blank" rel="noopener" hidden>
         <b>SELECTA AGENCY</b><span id="sp-fb-txt">Le lecteur Spotify n’a pas pu se charger ici (bloqueur ou connexion).</span><em>Écouter sur Spotify ↗</em></a>
     </div>
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app" data-app="wa" aria-label="WhatsApp">
+  <section class="screen app cold" data-app="wa" aria-label="WhatsApp">
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">WhatsApp</span><i></i></header>
     <div class="app-body chat" id="wa-chat">
       <div class="chat-who"><b aria-hidden="true">S</b>Selecta</div>
@@ -2857,7 +2931,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app game" data-app="game" aria-label="320">
+  <section class="screen app cold game" data-app="game" aria-label="320">
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">320</span><span class="g-score"><b id="g-score">0</b> streams<span class="g-cats" id="g-cats" hidden>🐈 <b>0</b></span></span></header>
     <div class="app-body">
       <canvas id="g-canvas"></canvas>
@@ -2890,7 +2964,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app compose" data-app="mail" aria-label="Nouveau message">
+  <section class="screen app cold compose" data-app="mail" aria-label="Nouveau message">
     <header class="app-head">
       <button class="back" data-open="home">Annuler</button>
       <span class="app-title">Nouveau message</span>
@@ -2905,7 +2979,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app metro" data-app="metro" aria-label="Paname rend fou">
+  <section class="screen app cold metro" data-app="metro" aria-label="Paname rend fou">
     <div class="app-body"><div class="pr" id="pr">
       <button type="button" class="bk bk-dark pr-home" data-open="home" aria-label="Accueil"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.6 5.4L8 12l6.6 6.6"/></svg></button>
       <canvas class="pr-cv" id="pr-cv" aria-label="Jeu Paname rend fou"></canvas>
@@ -2927,7 +3001,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app cam" data-app="cam" aria-label="Appareil photo">
+  <section class="screen app cold cam" data-app="cam" aria-label="Appareil photo">
     <div class="app-body">
       <div class="cam-stage" id="cam-stage" data-mode="photo">
         <video id="cam-video" src="gallery/cam/viewfinder.mp4" playsinline webkit-playsinline muted loop preload="auto" disablepictureinpicture></video>
@@ -2961,7 +3035,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour &agrave; l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app dice" data-app="dice" aria-label="DICE">
+  <section class="screen app cold dice" data-app="dice" aria-label="DICE">
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">DICE</span><i></i></header>
     <div class="app-body">
       <h2>Billets</h2>
@@ -2971,7 +3045,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app calc" data-app="calc" aria-label="Calculatrice">
+  <section class="screen app cold calc" data-app="calc" aria-label="Calculatrice">
     <div class="app-body">
       <button type="button" class="bk bk-dark calc-home" data-open="home" aria-label="Accueil"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.6 5.4L8 12l6.6 6.6"/></svg></button>
       <div class="calc-display" id="calc-display" aria-live="polite">0</div>
@@ -3000,7 +3074,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app clock" data-app="clock" aria-label="Horloge">
+  <section class="screen app cold clock" data-app="clock" aria-label="Horloge">
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">Horloge</span><i></i></header>
     <div class="app-body">
       <div class="clock-pane" id="clock-pane"></div>
@@ -3014,7 +3088,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
   </section>
 
-  <section class="screen app meteo" data-app="meteo" aria-label="Météo">
+  <section class="screen app cold meteo" data-app="meteo" aria-label="Météo">
     <header class="app-head"><button class="back" data-open="home"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Accueil</button><span class="app-title">Météo</span><i></i></header>
     <div class="app-body" id="meteo-body"></div>
     <button class="home-bar" data-open="home" aria-label="Retour à l'accueil"><span class="bar"></span></button>
@@ -3635,7 +3709,15 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   function render() {
     phone.dataset.screen = state.screen;
     phone.dataset.panel = state.panel;
-    document.querySelectorAll('.app').forEach(function (a) { a.classList.toggle('open', a.dataset.app === state.screen); });
+    document.querySelectorAll('.app').forEach(function (a) {
+      var on = a.dataset.app === state.screen;
+      if (on) { a.classList.remove('cold'); clearTimeout(a._coldT); }
+      else if (a.classList.contains('open') && a.dataset.app !== 'listen') {
+        clearTimeout(a._coldT);
+        a._coldT = setTimeout(function () { if (!a.classList.contains('open')) a.classList.add('cold'); }, 600);
+      }
+      a.classList.toggle('open', on);
+    });
     gameSync();
     gagStart();
     /* un changement d'écran fait au geste (glisser vers le haut…) prévient aussi les applications :
@@ -3652,6 +3734,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     k1: 'sounds/type1.mp3', k2: 'sounds/type2.mp3', k3: 'sounds/type3.mp3', k4: 'sounds/type4.mp3'
   };
   var SFXPOOL = {};
+  var SFX_MASTER = 0.42, SFXGAIN = { send: 0.28, k1: 0.35, k2: 0.35, k3: 0.35, k4: 0.35, msgIn: 0.5 };
   function sfx(name, vol) {
     var src = SFXSRC[name];
     if (!src) return;
@@ -3659,11 +3742,13 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     if (!pool) { pool = SFXPOOL[name] = [new Audio(src), new Audio(src), new Audio(src)]; pool.i = 0; }
     pool.i = (pool.i + 1) % pool.length;
     var a = pool[pool.i];
-    try { a.volume = (vol == null ? 0.5 : vol); a.currentTime = 0; a.play().catch(function () {}); } catch (e) {}
+    /* effets du téléphone, volontairement discrets (les musiques des jeux et de Spotify ne passent pas par ici) */
+    var k = SFXGAIN[name] || SFX_MASTER;
+    try { a.volume = Math.min(1, (vol == null ? 0.5 : vol) * k); a.currentTime = 0; a.play().catch(function () {}); } catch (e) {}
   }
   window.__sfx = sfx;
   var unlockSnd = null;
-  try { unlockSnd = new Audio('sounds/unlock.mp3'); unlockSnd.preload = 'auto'; unlockSnd.volume = 0.45; } catch (e) {}
+  try { unlockSnd = new Audio('sounds/unlock.mp3'); unlockSnd.preload = 'auto'; unlockSnd.volume = 0.2; } catch (e) {}
   var wasLock = false;
   function unlockByTap() {
     var lock = document.querySelector('.screen.lock');
@@ -3693,13 +3778,10 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       var live = window.__liveNote ? window.__liveNote() : null;
       setTimeout(function () {
         if (live) { unread[live.id] = true; updateBadge(); renderConvs(); showBanner(live.who, live.text, '#2BC160', live.id); return; }
-        unread.satine = true; updateBadge(); renderConvs();
-        showBanner('Satine', 'tu viens à la gaité ??? :3', '#2BC160', 'satine');
+        satineHello();
       }, 5000);
       if (live && live.id !== 'satine') setTimeout(function () {
-        if (state.screen === 'thread' && curThread === 'satine') return;
-        unread.satine = true; updateBadge(); renderConvs();
-        showBanner('Satine', 'tu viens à la gaité ??? :3', '#2BC160', 'satine');
+        satineHello();
       }, 45000);
     }
   }
@@ -3739,13 +3821,63 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     if (window.__logoGesture && performance.now() < window.__logoGesture) return;
     var b = phone.getBoundingClientRect();
     var k = 393 / b.width;
-    g = { x: (e.clientX - b.left) * k, y: (e.clientY - b.top) * k, w: 393, h: 852, cy: e.clientY, cx: e.clientX, k: k,
+    /* hauteur réelle de l'écran (iPhone SE, Safari avec ses barres…) : la zone « glisser pour l'accueil » est toujours en bas */
+    g = { x: (e.clientX - b.left) * k, y: (e.clientY - b.top) * k, w: 393, h: b.height * k, cy: e.clientY, cx: e.clientX, k: k,
           ctrl: !!(e.target.closest && e.target.closest('.pr-touch, .pr-ui, .pr-hud, .g-ui, .map-ui, .col-canvas, .col-hud, .ph-scroll, .ph-viewer, .cam-stage, .cam-ui, input, textarea, select, a, button:not(.home-bar)')) };
   });
+  /* glisser vers le haut depuis le bas d'une app : la carte suit le doigt, rétrécit, l'accueil réapparaît
+     derrière ; on lâche haut → elle file vers son icône, on lâche bas → elle revient en place */
+  function liveTarget() {
+    if (!g || g.ctrl || state.panel || state.screen === 'lock' || state.screen === 'home' || g.y <= g.h - 90 * Math.min(1, g.k)) return null;
+    var pv = document.getElementById('ph-viewer'); if (pv && pv.classList.contains('on')) return null;
+    var sec = document.querySelector('.screen.app.open'); if (!sec) return null;
+    return { sec: sec, home: document.querySelector('.screen.home') };
+  }
+  phone.addEventListener('pointermove', function (e) {
+    if (!g) return;
+    var dy = (e.clientY - g.cy) * g.k, dx = (e.clientX - g.cx) * g.k;
+    if (!g.live) {
+      if (dy > -10 || Math.abs(dx) > Math.abs(dy) * 1.4) return;
+      g.live = liveTarget(); if (!g.live) { g.live = false; return; }
+      g.live.sec.style.transition = 'none'; g.live.sec.style.overflow = 'hidden';
+      if (g.live.home) g.live.home.style.transition = 'none';
+      phone.classList.add('dragging-app');
+    }
+    if (!g.live) return;
+    var up = Math.max(0, -dy), p = Math.min(1, up / (420 * Math.min(1, g.k))), sc = 1 - p * 0.5;
+    g.live.sec.style.transform = 'translate(' + (dx * 0.6).toFixed(1) + 'px,' + (-up * 0.66).toFixed(1) + 'px) scale(' + sc.toFixed(4) + ')';
+    g.live.sec.style.borderRadius = Math.min(48, 14 + p * 160).toFixed(1) + 'px';
+    if (g.live.home) { g.live.home.style.opacity = Math.min(1, 0.35 + p * 2.2).toFixed(3); g.live.home.style.transform = 'scale(' + (0.92 + 0.08 * p).toFixed(4) + ')'; g.live.home.style.filter = 'blur(' + (2 * (1 - p)).toFixed(2) + 'px)'; }
+  });
+  function liveRelease(L, toHome) {
+    if (!L) return;
+    phone.classList.remove('dragging-app');
+    var props = ['transform', 'borderRadius', 'filter', 'opacity'];
+    if (toHome) {
+      /* même image : on rend la main aux transitions CSS, l'app part de là où est le doigt vers son icône */
+      L.sec.style.transition = ''; if (L.home) L.home.style.transition = '';
+      props.forEach(function (k) { if (k !== 'opacity') L.sec.style[k] = ''; if (L.home) L.home.style[k] = ''; });
+      setTimeout(function () { L.sec.style.overflow = ''; }, 520);
+    } else {
+      L.sec.style.transition = 'transform .42s cubic-bezier(.2,.9,.25,1.12), border-radius .42s ease';
+      if (L.home) L.home.style.transition = 'transform .42s ease, filter .42s ease';
+      if (L.home) L.home.style.transition = 'transform .42s ease, filter .42s ease, opacity .3s ease';
+      props.forEach(function (k) { if (k !== 'opacity') L.sec.style[k] = ''; if (L.home) L.home.style[k] = ''; });
+      setTimeout(function () { L.sec.style.transition = ''; L.sec.style.overflow = ''; if (L.home) L.home.style.transition = ''; }, 460);
+    }
+  }
   function endGesture(e) {
     if (!g) return;
     var s = g, dy = (e.clientY - s.cy) * s.k, dx = (e.clientX - s.cx) * s.k; g = null;
     var done = true;
+    if (s.live) {
+      var goHome = dy < -40 * Math.min(1, s.k) && state.screen !== 'home';
+      if (goHome) state.screen = 'home';
+      liveRelease(s.live, goHome);
+      suppressClick = true; setTimeout(function () { suppressClick = false; }, 60);   /* un glisser annulé n'est pas un tap sur la barre */
+      if (goHome) render();
+      return;
+    }
     /* Verrou : un simple tap déverrouille (le geste est géré par le pager horizontal) */
     if (!state.panel && state.screen === 'lock' && Math.abs(dx) < 12 && Math.abs(dy) < 12) {
       suppressClick = true;
@@ -3758,7 +3890,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     else if (state.screen === 'lock' && dy < -60) { state.screen = 'home'; }
     else if (state.screen !== 'lock' && state.screen !== 'home' && !s.ctrl &&
              !(document.getElementById('ph-viewer') && document.getElementById('ph-viewer').classList.contains('on')) &&
-             s.y > s.h - 90 && dy < -40) { state.screen = 'home'; }
+             s.y > s.h - 90 * Math.min(1, s.k) && dy < -40 * Math.min(1, s.k)) { state.screen = 'home'; }
     else { done = false; }
     if (done) { suppressClick = true; setTimeout(function () { suppressClick = false; }, 50); render(); }
   }
@@ -3944,13 +4076,19 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     if (!box) return;
     var rows = [];
     /* plus de conversation « voisin » */
-    CONVS.forEach(function (c) {
-      var real = c.msgs.filter(function (m) { return !m.ph; });
-      var last = real[real.length - 1];
-      rows.push({ id: c.id, name: c.name, prev: c.prev ? (c.prev[lang] || c.prev.fr) : ((last.me ? t('you') : '') + (last[lang] || last.fr)), when: c.when[lang] });
+    /* comme sur iPhone : aperçu du DERNIER message (reçu ou envoyé), son heure, et la conversation
+       la plus récente en haut de la liste */
+    CONVS.forEach(function (c, n) {
+      var all = convMsgs(c.id).filter(function (m) { return !m.ph; }), last = all[all.length - 1];
+      var log = chatLog[c.id] || [], lastLog = log[log.length - 1];
+      var prev = lastLog ? ((lastLog.me ? t('you') : '') + (lastLog.link ? '🔗 ' : '') + lastLog.text)
+        : (c.prev && c.prev.fr ? (c.prev[lang] || c.prev.fr) : (last ? (last.me ? t('you') : '') + last.text : ''));
+      if (!prev && !all.length) return;                 /* comme sur iPhone : pas de conversation vide dans la liste */
+      rows.push({ id: c.id, name: c.name, prev: prev, when: lastLog && lastLog.t ? lastLog.t : c.when[lang], ts: lastLog ? (lastLog.ts || 1) : 0, n: n });
     });
-    rows.push({ id: 'selecta', name: 'Selecta', prev: t('selectaPrev'), when: t('now') });
+    rows.push({ id: 'selecta', name: 'Selecta', prev: t('selectaPrev'), when: t('now'), ts: 0, n: 99 });
     rows = rows.filter(function (r) { return !hiddenConvs[r.id]; });
+    rows.sort(function (a, b) { return (b.ts - a.ts) || (a.n - b.n); });
     box.innerHTML = rows.map(function (r) {
       return '<li><button type="button" data-conv="' + r.id + '"' + (unread[r.id] ? ' class="unread"' : '') + '>' +
         '<span class="conv-dot" aria-hidden="true"></span><span class="conv-av" aria-hidden="true">' + esc(r.name.charAt(0)) + '</span>' +
@@ -3965,7 +4103,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     phone.classList.toggle('read', n === 0);
   }
   function markRead(id) { unread[id] = false; updateBadge(); renderConvs(); }
-  function renderThread() {
+  function renderThread(fresh) {
     if (!curThread) return;
     var name = convName(curThread);
     document.getElementById('th-name').textContent = name;
@@ -3981,8 +4119,12 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
         return '<div class="bubble' + (m.me ? ' me' : '') + (m.ph ? ' ph' : '') + '">' + inner + '</div>' +
           (m.t ? '<span class="bubble-time' + (m.me ? '' : ' them') + '">' + esc(m.t) + '</span>' : '');
       }).join('');
-    if (thForm) thForm.hidden = !P;
+    if (thForm) thForm.hidden = false;                 /* toutes les conversations sont ouvertes à l'écriture */
+    var lastMine = -1; _msgs.forEach(function (m, k) { if (m.me) lastMine = k; });
+    if (lastMine === _msgs.length - 1 && lastMine >= 0) chat.insertAdjacentHTML('beforeend', '<span class="bubble-status">' + (document.documentElement.lang === 'en' ? 'Delivered' : 'Distribué') + '</span>');
+    if (fresh) { var bs = chat.querySelectorAll('.bubble:not(.me)'); if (bs.length) bs[bs.length - 1].classList.add('arrive'); }
     chat.scrollTop = chat.scrollHeight;
+    requestAnimationFrame(function () { chat.scrollTop = chat.scrollHeight; });
   }
   /* ====== Réponses dans Messages ======
      Par défaut, les réponses sont SIMULÉES ici, dans le navigateur : personne n'écrit vraiment.
@@ -4090,17 +4232,24 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     lastKey = now;
     sfx('k' + (1 + Math.floor(Math.random() * 4)), 0.35);
   });
+  /* clavier mobile : on garde le dernier message visible au-dessus du champ */
+  if (thInput) thInput.addEventListener('focus', function () {
+    var c = document.getElementById('th-chat');
+    setTimeout(function () { if (c) c.scrollTop = c.scrollHeight; }, 320);
+  });
   if (thForm) thForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var txt = thInput.value.trim();
-    if (!txt || !curThread || thBusy || !persona(curThread)) return;
+    if (!txt || !curThread || thBusy) return;
     thInput.value = '';
     sfx('send', 0.5);
-    chatLog[curThread] = (chatLog[curThread] || []).concat([{ me: true, text: txt, t: hhmm() }]);
-    saveLog(); renderThread();
+    chatLog[curThread] = (chatLog[curThread] || []).concat([{ me: true, text: txt, t: hhmm(), ts: Date.now() }]);
+    saveLog(); renderThread(); renderConvs();
+    var sentTo = curThread;                              /* la réponse reviendra dans CE fil, même si on en change */
     if (scriptReply(curThread)) return;
 
     var P = persona(curThread);
+    if (!P) return;                                      /* pas de réponse prévue pour ce contact : le message part, c'est tout */
     if (P && P.once) {
       // la réponse existe déjà (indicateur ou historique) : silence total, pas même l'animation
       var already = autoReplySent[curThread] || (chatLog[curThread] || []).some(function (m) { return !m.me && m.text === P.once; });
@@ -4112,8 +4261,8 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       dots.className = 'typing'; dots.innerHTML = '<i></i><i></i><i></i>';
       box.appendChild(dots); box.scrollTop = box.scrollHeight;
       setTimeout(function () {
-        chatLog[curThread] = (chatLog[curThread] || []).concat([{ me: false, text: P.once, t: hhmm() }]);
-        saveLog(); thBusy = false; renderThread();
+        if (dots.parentNode) dots.parentNode.removeChild(dots);
+        thBusy = false; pushIncoming(sentTo, P.once);
       }, 1100);
       return;
     }
@@ -4126,8 +4275,8 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     aiReply(curThread, txt).then(function (reply) {
       var wait = Math.max(600, 900 + reply.length * 18 - (Date.now() - started));
       setTimeout(function () {
-        chatLog[curThread] = (chatLog[curThread] || []).concat([{ me: false, text: reply, t: hhmm() }]);
-        saveLog(); thBusy = false; renderThread();
+        if (typing.parentNode) typing.parentNode.removeChild(typing);
+        thBusy = false; pushIncoming(sentTo, reply);
       }, wait);
     });
   });
@@ -4140,16 +4289,20 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   var SCRIPT_KEY = 'selecta-script-v1';
   var SCRIPT = {
     axel: ["T'es qui ?", "Ok mec, grave cool, je suis en train de bosser. On se tient au courant."],
-    satine: ['Choppe tes places ici 🎟️']
+    satine: ['Choppe tes places ici 🎟️'],
+    /* Mitty et Filiz : une réponse chacune, puis elles reprennent leur journée */
+    mitty: ['yes ! je te redis vite ✨'],
+    filiz: ['trop bien, on se cale un call demain ?']
   };
   var TICKET_URL = 'https://shotgun.live/fr/events/satine-la-gaite-lyrique-2027';
-  var scriptState = { axel: 0, satine: 0, satSeed: false };
+  var scriptState = { axel: 0, satine: 0, mitty: 0, filiz: 0, satSeed: false };
   try {
     var _ss = JSON.parse(localStorage.getItem(SCRIPT_KEY) || 'null');
     if (_ss && typeof _ss === 'object') {
       scriptState.axel = _ss.axel || 0;
       scriptState.satine = _ss.satine || 0;
       scriptState.satSeed = !!_ss.satSeed;
+      scriptState.mitty = _ss.mitty || 0; scriptState.filiz = _ss.filiz || 0;
     }
   } catch (e) {}
   /* migration : remplace l'ancien premier message de Satine déjà enregistré */
@@ -4164,12 +4317,22 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   } catch (e) {}
   function saveScript() { try { localStorage.setItem(SCRIPT_KEY, JSON.stringify(scriptState)); } catch (e) {} }
 
+  /* la conversation est-elle réellement à l'écran ? (curThread reste rempli quand on revient à la liste) */
+  function viewing(id) { return curThread === id && state.screen === 'thread' && !state.panel && !document.hidden; }
   function pushIncoming(id, text, link) {
-    chatLog[id] = (chatLog[id] || []).concat([{ me: false, text: text, t: hhmm(), link: !!link }]);
+    chatLog[id] = (chatLog[id] || []).concat([{ me: false, text: text, t: hhmm(), link: !!link, ts: Date.now() }]);
     saveLog();
-    if (curThread === id) renderThread(); else { renderConvs(); if (typeof updateBadge === 'function') updateBadge(); }
-    if (curThread !== id) { unread[id] = true; }
-    sfx('msgIn', 0.4);
+    if (viewing(id)) {
+      renderThread(true);
+      sfx('msgIn', 0.4);
+    } else {
+      unread[id] = true; updateBadge(); renderConvs();
+      if (curThread === id) renderThread();
+      /* ailleurs que dans Messages : un bandeau discret ; dans la liste des conversations : la ligne remonte, en gras */
+      var inMessages = state.screen === 'msgs' || state.screen === 'thread' || state.screen === 'msg';
+      if (!inMessages && state.screen !== 'lock') { try { showBanner(convName(id), link ? '🔗 ' + text : text, '#2BC160', id); } catch (e) { sfx('msgIn', 0.4); } }
+      else sfx('msgIn', 0.4);
+    }
   }
   function typingBubble() {
     var box = document.getElementById('th-chat');
@@ -4180,7 +4343,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     return d;
   }
   function sayLater(id, text, delay, link) {
-    var dots = (curThread === id) ? typingBubble() : null;
+    var dots = viewing(id) ? typingBubble() : null;
     setTimeout(function () {
       if (dots && dots.parentNode) dots.parentNode.removeChild(dots);
       pushIncoming(id, text, link);
@@ -4202,8 +4365,15 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   }
   window.__script = scriptState;
 
+  /* le premier message de Satine arrive pour de vrai : dans le fil, dans la liste (en haut, en gras) et en bandeau */
+  function satineHello() {
+    if (scriptState.satSeed || (chatLog.satine || []).some(function (m) { return !m.me; })) return;
+    scriptState.satSeed = true; saveScript();
+    pushIncoming('satine', 'tu viens à la gaité ??? :3');
+  }
   function openThread(id) {
     curThread = id;
+    try { if (document.getElementById('banner-who').textContent === convName(id)) hideBanner(); } catch (e) {}
     unread[id] = false;
     updateBadge(); renderConvs(); renderThread();
     open('thread');
@@ -4239,21 +4409,13 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       var typing = document.createElement('div');
       typing.className = 'bubble typing';
       typing.textContent = 'Satine écrit…';
-      if (curThread === 'satine' && chat) { chat.appendChild(typing); chat.scrollTop = chat.scrollHeight; }
+      if (viewing('satine') && chat) { chat.appendChild(typing); chat.scrollTop = chat.scrollHeight; }
       setTimeout(function () {
         try { localStorage.setItem('selecta-satine-2', '1'); } catch (e) {}
         satinePending = false;
-        var txt = 'je te laisse gerer ça mais ça va être incroyable';
-        var c = CONVS.filter(function (x) { return x.id === 'satine'; })[0];
-        if (c && !c.msgs.some(function (m) { return m.fr === txt; })) {
-          c.msgs.push({ fr: txt, en: 'I’ll let you handle it but it’s going to be incredible' });
-        }
-        if (curThread === 'satine') { renderThread(); }
-        else if (!(typeof autoReplySent === 'object' && autoReplySent.satine)) {
-          unread.satine = true; updateBadge(); renderConvs();
-          try { showBanner('Satine', txt); } catch (e) {}
-        }
-        renderConvs();
+        var txt = lang === 'en' ? 'I’ll let you handle it but it’s going to be incredible' : 'je te laisse gerer ça mais ça va être incroyable';
+        if (typing.parentNode) typing.parentNode.removeChild(typing);
+        if (!(chatLog.satine || []).some(function (m) { return !m.me && m.text === txt; })) pushIncoming('satine', txt);
       }, 1600);
     }, 10000);
   }
@@ -4313,13 +4475,18 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   })();
   /* décor : Miku en fond de scène */
   var MIKU_IMG = new Image();
-  MIKU_IMG.src = 'images/miku-gag.png';
   var BG_IMG = new Image();
-  BG_IMG.src = 'images/320-miku.png';
   window.__320bg = BG_IMG;
   /* Kappa : le mini-boss secret (images/kappa.png, détouré depuis le dessin fourni) */
   var KAPPA_IMG = new Image();
-  KAPPA_IMG.src = 'images/kappa.png';
+  /* les images du jeu ne se chargent qu'à sa première ouverture */
+  function load320() {
+    if (BG_IMG.src) return;
+    MIKU_IMG.src = 'images/miku-gag.png'; BG_IMG.src = 'images/320-miku.png'; KAPPA_IMG.src = 'images/kappa.png';
+    BG_IMG.onload = function () { try { if (typeof drawStage === 'function') drawStage(); } catch (e) {} };
+  }
+  document.addEventListener('app:screen', function (e) { if (e.detail === 'game') load320(); });
+  if (/#320\b/.test(location.hash)) load320();
   var gs = { mode: 'ready', w: 0, h: 0, p: null, plats: [], climbed: 0, score: 0, best: 0, raf: 0, last: 0, tx: null, left: false, right: false, mile: 0, over: 0,
     parts: [], pops: [], combo: 0, bestCombo: 0, flash: 0, beat: 0, trail: [], t: 0, cats: 0, catPower: 0, gags: [], gagsTaken: 0,
     bonus: 0, onBeat: 0, beatMax: 0, ring: 0, bestClimb: 0, newBest: false, acc: 0, kappa: null, kPlan: 0, playT: 0, kShake: 0, kBy: false };
@@ -6108,7 +6275,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
         o.type = 'sine'; o.frequency.value = 880;
         o.connect(g); g.connect(ac.destination);
         g.gain.setValueAtTime(0.0001, ac.currentTime + i * 0.35);
-        g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + i * 0.35 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.09, ac.currentTime + i * 0.35 + 0.02);
         g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + i * 0.35 + 0.3);
         o.start(ac.currentTime + i * 0.35); o.stop(ac.currentTime + i * 0.35 + 0.32);
       }
@@ -6118,7 +6285,9 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   function alarmFire(label) { beep(4); if (navigator.vibrate) navigator.vibrate([400, 200, 400]); }
 
   /* ================= MÉTÉO (Open-Meteo, données réelles) ================= */
-  var WX = { data: null, at: 0, busy: false };
+  var WX = { data: null, at: 0, busy: false, cached: false };
+  /* dernière météo connue : affichée tout de suite (et si le réseau tombe), puis rafraîchie */
+  try { var _wc = JSON.parse(localStorage.getItem('selecta-wx') || 'null'); if (_wc && _wc.data && Date.now() - _wc.at < 43200000) { WX.data = _wc.data; WX.at = _wc.at; WX.cached = true; } } catch (e) {}
   var PARIS = { lat: 48.8566, lon: 2.3522 };
   var WMO = {
     0: ['Ensoleillé', '☀️'], 1: ['Peu nuageux', '🌤️'], 2: ['Partiellement nuageux', '⛅'], 3: ['Couvert', '☁️'],
@@ -6163,7 +6332,9 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       '&hourly=temperature_2m,weather_code,precipitation_probability,is_day' +
       '&timezone=Europe%2FParis&forecast_days=10';
     fetch(url).then(function (r) { return r.json(); }).then(function (j) {
-      WX.data = j; WX.at = Date.now(); WX.busy = false;
+      if (!j || !j.daily) throw new Error('wx');
+      WX.data = j; WX.at = Date.now(); WX.busy = false; WX.cached = false;
+      try { localStorage.setItem('selecta-wx', JSON.stringify({ at: WX.at, data: j })); } catch (e) {}
       wxRender();
     }).catch(function () { WX.busy = false; wxRender(); });
   }
@@ -6175,7 +6346,10 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     if (!d || !d.daily) {
       var msg = '<div class="wx-city">Paris</div><div class="wx-temp">--°</div><div class="wx-cond">Météo indisponible</div>';
       if (widget) widget.innerHTML = msg;
-      if (body) body.innerHTML = '<div class="wx-hero"><div class="c">Paris</div><div class="t">--°</div><div class="d">Météo indisponible — vérifie la connexion</div></div>';
+      if (body) body.innerHTML = '<div class="wx-hero"><div class="c">Paris</div><div class="t">--°</div><div class="d">Météo indisponible — vérifie la connexion</div>' +
+        '<button type="button" class="wx-retry" id="wx-retry">' + (WX.busy ? 'Chargement…' : 'Réessayer') + '</button></div>';
+      var rb = document.getElementById('wx-retry');
+      if (rb) rb.addEventListener('click', function () { rb.textContent = 'Chargement…'; wxFetch(); });
       return;
     }
     var cur = d.current, day = d.daily;
@@ -6360,8 +6534,10 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       }, ms);
     });
   });
+  if (WX.data) wxRender();
   wxFetch();
   setInterval(function () { if (Date.now() - WX.at > 1800000) wxFetch(); }, 600000);
+  document.addEventListener('app:screen', function (e) { if (e.detail === 'meteo' && (!WX.data || WX.cached || Date.now() - WX.at > 1800000)) wxFetch(); });
 
   /* ================= ACCUEIL : pages, déplacement, suppression ================= */
   var home = $('.home');
@@ -6475,7 +6651,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
         var tile = e.target.closest('.app-btn');
         if (!tile) return;
         if (editing) { startDrag(e, tile); return; }
-        lpTimer = setTimeout(function () { setEditing(true); }, 480);
+        lpTimer = setTimeout(function () { if (window.__quickMenu && window.__quickMenu(tile)) return; setEditing(true); }, 480);
       });
       pagesEl.addEventListener('pointerup', function () { clearTimeout(lpTimer); });
       pagesEl.addEventListener('pointercancel', function () { clearTimeout(lpTimer); });
@@ -7210,6 +7386,104 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 </script>
 
 <script>
+/* ===== Appui long sur une icône : actions rapides, comme sur iPhone =====
+   Le fond se floute, l'icône se soulève, un menu propose des raccourcis utiles (une fiche d'artiste,
+   le speedrun, les Shorts…) et « Modifier l'écran d'accueil » (le mode où les icônes tremblent). */
+(function () {
+  var phone = document.getElementById('phone'); if (!phone) return;
+  var EN = function () { return (document.documentElement.lang || '').indexOf('en') === 0; };
+  var I = {
+    person: '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 8c.8-3.4 3.6-5.5 7-5.5s6.2 2.1 7 5.5"/>',
+    play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/>',
+    bolt: '<path d="M13 2.5 5.5 13.5H11l-1 8 7.5-11H12z" fill="currentColor" stroke="none"/>',
+    pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10" r="2.3"/>',
+    bubble: '<path d="M4.5 5.5h15v10h-9l-4.5 3.5v-3.5h-1.5z"/>',
+    mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4 7 8 6 8-6"/>',
+    ticket: '<path d="M4 7.5h16v3a2 2 0 0 0 0 3v3H4v-3a2 2 0 0 0 0-3z"/><path d="M14 7.5v9" stroke-dasharray="1.6 1.6"/>',
+    timer: '<circle cx="12" cy="13" r="7"/><path d="M12 9.5V13l2.2 1.6M10 3.5h4"/>',
+    pencil: '<path d="M4.5 19.5 5.5 15 15.5 5a2.1 2.1 0 0 1 3 3l-10 10z"/><path d="m13.5 7 3 3"/>',
+    grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>'
+  };
+  function open(a) { if (window.__open) window.__open(a); }
+  function later(fn, ms) { setTimeout(fn, ms || 450); }
+  function artist(slug) { return function () { if (!(window.__openArtist && window.__openArtist(slug))) open('mgmt'); }; }
+  var ACT = {
+    mgmt: [['Satine', 'person', artist('satine')], ['Filiz', 'person', artist('filiz')], ['Mitty', 'person', artist('mitty')]],
+    listen: [[['Écouter la playlist SELECTA', 'Play the SELECTA playlist'], 'play', function () { open('listen'); later(function () { try { if (window.__spotifyCtrl) window.__spotifyCtrl.play(); } catch (e) {} }, 1600); }]],
+    msgs: [[['Écrire à Satine', 'Text Satine'], 'bubble', function () { if (window.__openThread) window.__openThread('satine'); else open('msgs'); }],
+           [['Écrire à Selecta', 'Write to Selecta'], 'mail', function () { open('msg'); }]],
+    metro: [[['Jouer', 'Play'], 'play', function () { open('metro'); }],
+            ['Speedrun', 'timer', function () { open('metro'); var n = 0; (function go() { var b = document.querySelector('.pr-menu [data-act="sr"]'); if (b) b.click(); else if (n++ < 30) setTimeout(go, 100); })(); }]],
+    game: [[['Jouer à 320', 'Play 320'], 'play', function () { open('game'); }]],
+    yt: [['Shorts', 'bolt', function () { open('yt'); later(function () { var t = document.querySelector('.y2-tab[data-tab="shorts"]'); if (t) t.click(); }, 380); }]],
+    plan: [[['Prochain concert', 'Next show'], 'pin', function () { open('plan'); if (window.__mapReady) window.__mapReady(function () { later(function () { if (window.__openShow && window.__upcoming && window.__upcoming[0]) window.__openShow(window.__upcoming[0]); }, 900); }); }]],
+    dice: [[['Prochaines dates', 'Upcoming dates'], 'ticket', function () { open('dice'); }]],
+    mail: [[['Nouveau message', 'New message'], 'mail', function () { open('mail'); }]],
+    wa: [[['Écrire à Selecta', 'Write to Selecta'], 'bubble', function () { open('wa'); }]]
+  };
+  var layer = null, blockClick = 0;
+  window.addEventListener('click', function (e) {
+    if (Date.now() < blockClick) { e.preventDefault(); e.stopPropagation(); blockClick = 0; }
+  }, true);
+  function svg(k) { return '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + I[k] + '</svg>'; }
+  function close() {
+    if (!layer) return;
+    var L = layer; layer = null;
+    L.classList.remove('on'); setTimeout(function () { L.remove(); }, 260);
+  }
+  window.__quickMenu = function (tile) {
+    if (!tile || layer) return false;
+    var key = tile.getAttribute('data-open'); if (!key) return false;
+    var ico = tile.querySelector('.ico') || tile; var pr = phone.getBoundingClientRect(), ir = ico.getBoundingClientRect();
+    var k = pr.width / (phone.offsetWidth || pr.width);
+    var x = (ir.left - pr.left) / k, y = (ir.top - pr.top) / k, w = ir.width / k;
+    var acts = (ACT[key] || []).slice();
+    var rows = acts.map(function (a, i) {
+      var lab = Array.isArray(a[0]) ? a[0][EN() ? 1 : 0] : a[0];
+      return '<button type="button" class="qa-item" data-i="' + i + '"><span>' + lab + '</span>' + svg(a[1]) + '</button>';
+    }).join('');
+    rows += (rows ? '<i class="qa-sep"></i>' : '') + '<button type="button" class="qa-item" data-i="edit"><span>' + (EN() ? 'Edit Home Screen' : 'Modifier l’écran d’accueil') + '</span>' + svg('grid') + '</button>';
+    var PH = pr.height / k, below = y + w + 14 + (acts.length + 1) * 46 + 20 < PH - 40;
+    var mx = Math.max(12, Math.min(393 - 12 - 254, x + w / 2 - 127));
+    layer = document.createElement('div');
+    layer.className = 'qa-layer';
+    layer.innerHTML = '<div class="qa-dim"></div>' +
+      '<div class="qa-ico" style="left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + w + 'px">' + ico.innerHTML + '</div>' +
+      '<div class="qa-menu ' + (below ? 'down' : 'up') + '" style="left:' + mx + 'px;' + (below ? 'top:' + (y + w + 12) : 'bottom:' + (PH - y + 12)) + 'px;transform-origin:' + (x + w / 2 - mx) + 'px ' + (below ? '0' : '100%') + '">' + rows + '</div>';
+    phone.appendChild(layer);
+    var bg = getComputedStyle(ico).backgroundImage, bc = getComputedStyle(ico).backgroundColor;
+    var qi = layer.querySelector('.qa-ico'); qi.style.backgroundImage = bg; qi.style.backgroundColor = bc;
+    requestAnimationFrame(function () { requestAnimationFrame(function () { if (layer) layer.classList.add('on'); }); });
+    blockClick = Date.now() + 900;
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {}
+    layer.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+    layer.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var b = e.target.closest('.qa-item');
+      close();
+      if (!b) return;
+      var i = b.getAttribute('data-i');
+      if (i === 'edit') { if (window.__setEditing) window.__setEditing(true); return; }
+      var a = acts[+i]; if (a) setTimeout(a[2], 120);
+    });
+    return true;
+  };
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  document.addEventListener('app:screen', close);
+  /* le dock aussi */
+  var dock = document.querySelector('.dock'), t = 0, sx = 0, sy = 0;
+  if (dock) {
+    dock.addEventListener('pointerdown', function (e) {
+      var tile = e.target.closest('[data-open]'); if (!tile) return;
+      sx = e.clientX; sy = e.clientY;
+      t = setTimeout(function () { window.__quickMenu(tile); }, 480);
+    });
+    dock.addEventListener('pointermove', function (e) { if (Math.abs(e.clientX - sx) > 8 || Math.abs(e.clientY - sy) > 8) clearTimeout(t); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { dock.addEventListener(ev, function () { clearTimeout(t); }); });
+  }
+})();
+</script>
+<script>
 /* Point d'origine de chaque app : le centre de l'icône touchée (accueil, dock, widget).
    L'app s'agrandit depuis ce point et y retourne à la fermeture, comme sur iOS. */
 (function () {
@@ -7243,6 +7517,49 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   cam.addEventListener('click', function (e) { e.stopPropagation(); if (window.__open) window.__open('cam'); });
 })();
 </script>
+<script>
+/* chargement à la demande : les gros modules (jeu Paname, carte) ne pèsent rien tant qu'on ne les ouvre pas */
+window.__lazy = (function () {
+  var st = {};
+  return function (src, cb, css) {
+    var s = st[src];
+    if (!s) {
+      s = st[src] = { cbs: [], done: false };
+      if (css) { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = css; document.head.appendChild(l); }
+      var el = document.createElement('script'); el.src = src; el.async = true;
+      el.onload = function () { s.done = true; s.cbs.splice(0).forEach(function (f) { try { f(); } catch (e) { console.error(e); } }); };
+      el.onerror = function () { s.failed = true; };
+      document.body.appendChild(el);
+    }
+    if (s.done) { if (cb) cb(); } else if (cb) s.cbs.push(cb);
+  };
+})();
+/* on prend de l'avance : dès que le doigt se pose sur l'icône, le module part ; et une fois le
+   téléphone déverrouillé et calme, le navigateur le met en cache sans l'exécuter */
+document.addEventListener('pointerdown', function (e) {
+  var b = e.target.closest && e.target.closest('[data-open="metro"], [data-open="plan"]');
+  if (!b) return;
+  if (b.dataset.open === 'metro') window.__lazy('paname.js');
+  else if (window.__mapReady) window.__lazy('vendor/maplibre/maplibre-gl.js', null, 'vendor/maplibre/maplibre-gl.css');
+}, true);
+document.addEventListener('app:screen', function once(e) {
+  if (e.detail !== 'home') return;
+  document.removeEventListener('app:screen', once);
+  setTimeout(function () {
+    ['paname.js', 'vendor/maplibre/maplibre-gl.js', 'vendor/maplibre/maplibre-gl.css'].forEach(function (h) {
+      if (!h) return;
+      var l = document.createElement('link'); l.rel = 'prefetch'; l.href = h; document.head.appendChild(l);
+    });
+  }, 4000);
+});
+document.addEventListener('app:screen', function (e) {
+  if (e.detail !== 'metro') return;
+  window.__lazy('paname.js', function () {
+    var ph = document.getElementById('phone');
+    if (window.metropop && ph && ph.dataset.screen === 'metro') { window.metropop.size(); window.metropop.menu(); }
+  });
+});
+</script>
 <script src="vendor/three.min.js"></script>
 <script src="gallery/manifest.js"></script>
 <script src="photos.js"></script>
@@ -7250,7 +7567,6 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 <script src="artistes.js"></script>
 <script src="leaderboard-config.js"></script>
 <script src="leaderboard.js"></script>
-<script src="paname.js"></script>
 <script src="merch-config.js"></script>
 <script src="merch.js"></script>
 <script>
@@ -8118,10 +8434,20 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     });
   };
 
-  /* repli : si l'API ne répond pas (bloqueur, hors ligne), on garde le comportement d'avant */
+  /* le lecteur (et ses cookies) n'arrive qu'à la première ouverture de l'app Spotify */
+  var booted = false;
+  function boot() {
+    if (booted) return; booted = true;
+    var fr = document.querySelector('[data-app="listen"] iframe[data-src]');
+    if (fr && !fr.getAttribute('src')) fr.setAttribute('src', fr.getAttribute('data-src'));
+    var sc = document.createElement('script'); sc.src = 'https://open.spotify.com/embed/iframe-api/v1'; sc.async = true; document.body.appendChild(sc);
+    fallbackLater();
+  }
+  document.addEventListener('app:screen', function (e) { if (e.detail === 'listen') boot(); });
+  window.__spotifyBoot = boot;
   /* repli : si l'API ne répond pas (bloqueur, hors ligne), on n'allume PAS l'indicateur de lecture
      (rien ne joue) : l'app propose d'ouvrir la playlist directement dans Spotify. */
-  setTimeout(function () {
+  function fallbackLater() { setTimeout(function () {
     if (window.__spotifyApi) return;
     var fb = document.getElementById('sp-fallback');
     if (fb) {
@@ -8131,11 +8457,10 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
         fb.querySelector('em').textContent = 'Listen on Spotify ↗';
       }
     }
-  }, 6000);
+  }, 6000); }
 })();
 </script>
-<!-- chargé APRÈS la définition de onSpotifyIframeApiReady : sinon, si le script arrive vite (cache), le rappel n'est jamais appelé -->
-<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+<!-- l'API de l'embed est chargée à la première ouverture de Spotify, APRÈS la définition de onSpotifyIframeApiReady -->
 
 
 <script>
@@ -8240,9 +8565,9 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
 </script>
 
 
-<script src="vendor/maplibre/maplibre-gl.js"></script>
 <script>
-/* ===== Plan : carte des concerts des artistes (données = agenda + DICE) ===== */
+/* ===== Plan : carte des concerts des artistes (données = agenda + DICE) =====
+   La bibliothèque de carte (≈ 850 Ko) n'est chargée qu'à la première ouverture du Plan. */
 (function () {
   var CONCERTS = [
     { a: 'Filiz', d: '2026-11-19', v: 'Le Ferrailleur', city: 'Nantes', country: 'France', addr: 'Quai des Antilles, 44200 Nantes', lat: 47.2006, lon: -1.5737, url: '' },
@@ -8259,7 +8584,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   var PHOTO = { Satine: 'photos/satine.jpg', Filiz: 'photos/filiz.jpg', Mitty: 'photos/mitty.jpg' };
   var MONTHS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
   var el = document.getElementById('cmap');
-  if (!el || !window.maplibregl) return;
+  if (!el) return;
 
   function frDate(iso) {
     var p = iso.split('-');
@@ -8270,21 +8595,43 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
                          .sort(function (x, y) { return x.d < y.d ? -1 : 1; });
 
   var MAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
-  var map = new maplibregl.Map({
+  var map = null, activeFilter = 'Tout';
+  var chips = document.getElementById('map2-chips');
+  var names = ['Tout', 'Satine', 'Filiz', 'Mitty'];
+  chips.innerHTML = names.map(function (n) {
+    return '<button class="map2-chip' + (n === 'Tout' ? ' on' : '') + '" type="button" data-f="' + n + '">' + n + '</button>';
+  }).join('');
+  function sheet() { return document.getElementById('map2-sheet'); }
+  function closeCard() { sheet().classList.remove('on'); }
+  function visible() { return upcoming.filter(function (c) { return activeFilter === 'Tout' || c.a === activeFilter; }); }
+  chips.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-f]'); if (!b) return;
+    activeFilter = b.getAttribute('data-f');
+    Array.prototype.forEach.call(chips.children, function (x) { x.classList.toggle('on', x === b); });
+    if (!map) return;                                   /* la carte arrive : elle prendra ce filtre */
+    upcoming.forEach(function (c) {
+      var show = activeFilter === 'Tout' || c.a === activeFilter;
+      if (show) { c._marker.addTo(map); } else { c._marker.remove(); }
+    });
+    closeCard();
+    fitTo(visible(), 60);
+  });
+  function fitTo(list, pad) {
+    if (!list.length || !map) return;
+    var b = new maplibregl.LngLatBounds();
+    list.forEach(function (c) { b.extend([c.lon, c.lat]); });
+    map.fitBounds(b, { padding: pad || 60, maxZoom: 9, duration: 700 });
+  }
+  function initMap() {
+  if (map || !window.maplibregl) return;
+  el.classList.remove('loading');
+  map = new maplibregl.Map({
     container: el, style: MAP_STYLE, center: [1.8, 46.6], zoom: 5.2,
     attributionControl: false,
     dragRotate: false, pitchWithRotate: false, touchZoomRotate: true
   });
   map.touchZoomRotate.disableRotation();
 
-  function fitTo(list, pad) {
-    if (!list.length) return;
-    var b = new maplibregl.LngLatBounds();
-    list.forEach(function (c) { b.extend([c.lon, c.lat]); });
-    map.fitBounds(b, { padding: pad || 60, maxZoom: 9, duration: 700 });
-  }
-
-  var activeFilter = 'Tout';
   upcoming.forEach(function (c) {
     var node = document.createElement('button');
     node.type = 'button';
@@ -8292,12 +8639,10 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     node.setAttribute('aria-label', c.a + ' — ' + c.v + ', ' + c.city);
     node.innerHTML = '<span class="mpin">' + c.a.charAt(0) + '</span>';
     node.addEventListener('click', function (e) { e.stopPropagation(); openCard(c); });
-    var m = new maplibregl.Marker({ element: node, anchor: 'center' })
-      .setLngLat([c.lon, c.lat]).addTo(map);
+    var m = new maplibregl.Marker({ element: node, anchor: 'center' }).setLngLat([c.lon, c.lat]);
+    if (activeFilter === 'Tout' || c.a === activeFilter) m.addTo(map);
     c._marker = m;
   });
-
-  function sheet() { return document.getElementById('map2-sheet'); }
   function openCard(c) {
     var same = upcoming.filter(function (x) { return x.v === c.v; });
     var html = '<div class="mcard">' +
@@ -8316,25 +8661,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     sh.classList.add('on');
     map.flyTo({ center: [c.lon, c.lat], zoom: Math.max(map.getZoom(), 11), duration: 800 });
   }
-  function closeCard() { sheet().classList.remove('on'); }
-
-  var chips = document.getElementById('map2-chips');
-  var names = ['Tout', 'Satine', 'Filiz', 'Mitty'];
-  chips.innerHTML = names.map(function (n) {
-    return '<button class="map2-chip' + (n === 'Tout' ? ' on' : '') + '" type="button" data-f="' + n + '">' + n + '</button>';
-  }).join('');
-  chips.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-f]'); if (!b) return;
-    activeFilter = b.getAttribute('data-f');
-    Array.prototype.forEach.call(chips.children, function (x) { x.classList.toggle('on', x === b); });
-    upcoming.forEach(function (c) {
-      var show = activeFilter === 'Tout' || c.a === activeFilter;
-      if (show) { c._marker.addTo(map); } else { c._marker.remove(); }
-    });
-    closeCard();
-    var vis = upcoming.filter(function (c) { return activeFilter === 'Tout' || c.a === activeFilter; });
-    fitTo(vis, 60);
-  });
+  window.__openShow = openCard;
   /* libellés de la carte en français quand la donnée existe */
   map.on('style.load', function () {
     try {
@@ -8346,17 +8673,26 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     } catch (e) {}
   });
   map.on('click', closeCard);
+  window.__map = map;
+  map.on('load', function () { setTimeout(wake, 120); });
+  window.addEventListener('resize', function () { if (map) map.resize(); });
+  }
   /* la carte n'a une taille qu'une fois l'écran Plan affiché */
   function wake() {
+    if (!map) return;
     try { map.resize(); } catch (e) {}
-    fitTo(upcoming, 46);
+    fitTo(visible(), 46);
   }
-  window.__map = map; window.__fitTo = fitTo; window.__upcoming = upcoming;
-  map.on('load', function () { setTimeout(wake, 120); });
+  window.__fitTo = fitTo; window.__upcoming = upcoming;
+  function ensureMap(cb) {
+    if (map) { if (cb) cb(); return; }
+    el.classList.add('loading');
+    window.__lazy('vendor/maplibre/maplibre-gl.js', function () { initMap(); if (cb) cb(); }, 'vendor/maplibre/maplibre-gl.css');
+  }
+  window.__mapReady = ensureMap;
   document.addEventListener('app:screen', function (e) {
-    if (e.detail === 'plan') setTimeout(wake, 280);
+    if (e.detail === 'plan') ensureMap(function () { setTimeout(wake, 280); });
   });
-  window.addEventListener('resize', function () { map.resize(); });
 
   /* DICE lit la même source : une date ajoutée ici apparaît dans les deux apps */
   (function syncDice() {
@@ -8641,7 +8977,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   ROUTE.youtube = 'yt'; ROUTE.instagram = 'ig'; ROUTE.messages = 'msgs'; ROUTE.billets = 'dice'; ROUTE.tickets = 'dice';
   var BASE = location.pathname + location.search;
   var hasHistory = !!(window.history && history.pushState);
-  var depth = 0, replaying = false, ignorePop = false;
+  var depth = 0, replaying = false, ignorePop = false, homeAt = 0;
   var curArtist = null;
 
   function hashFor(s) {
@@ -8651,7 +8987,9 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   function onScreen(s) {
     if (!hasHistory || replaying) return;
     if (s === 'lock' || s === 'home') {
+      homeAt = Date.now();
       if (depth > 0) { ignorePop = true; history.go(-depth); depth = 0; }
+      else if (history.state && history.state.s !== 'home') history.replaceState({ s: 'home', d: 0 }, '', BASE);
       return;
     }
     var st = history.state || {};
@@ -8678,8 +9016,17 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       }
     });
     window.addEventListener('popstate', function (e) {
-      if (ignorePop) { ignorePop = false; return; }
+      /* retour à l'accueil : quel que soit l'endroit où l'historique atterrit, l'entrée courante devient « accueil »
+         (sinon une app ouverte avant, comme Photos, pouvait ressurgir au retour suivant) */
+      if (ignorePop) {
+        ignorePop = false;
+        if (!e.state || e.state.s !== 'home') history.replaceState({ s: 'home', d: 0 }, '', BASE);
+        depth = 0; return;
+      }
       var st = e.state || { s: 'home', d: 0 };
+      if (st.s !== 'home' && Date.now() - homeAt < 900 && phone.dataset.screen === 'home') {
+        history.replaceState({ s: 'home', d: 0 }, '', BASE); depth = 0; return;   /* écho d'un retour à l'accueil : on reste sur l'accueil */
+      }
       replaying = true;
       try {
         depth = st.d || 0;

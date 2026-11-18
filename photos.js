@@ -111,6 +111,28 @@
       grid.appendChild(tile(m));
     });
     updateCount();
+    bindFade(); requestAnimationFrame(fadeMonths);
+  }
+
+  /* les intitulés de mois s'effacent en approchant du haut : jamais sous l'heure ni les icônes de la barre d'état */
+  var fadeRaf = 0;
+  function fadeMonths() {
+    fadeRaf = 0;
+    var page = $('ph-page'); if (!page) return;
+    var top = page.getBoundingClientRect().top, st = document.querySelector('.status');
+    var limit = st ? st.getBoundingClientRect().bottom : top + 50;
+    var ms = page.querySelectorAll('.ph-month');
+    for (var i = 0; i < ms.length; i++) {
+      var r = ms[i].getBoundingClientRect();
+      if (r.bottom < top - 20 || r.top > limit + 80) { if (ms[i].style.opacity !== '') ms[i].style.opacity = ''; continue; }
+      var o = clamp((r.top - limit) / 36, 0, 1);
+      ms[i].style.opacity = o >= 1 ? '' : o.toFixed(3);
+    }
+  }
+  function bindFade() {
+    var page = $('ph-page'); if (!page || page.__fade) return;
+    page.__fade = true;
+    page.addEventListener('scroll', function () { if (!fadeRaf) fadeRaf = requestAnimationFrame(fadeMonths); }, { passive: true });
   }
 
   function updateCount() {

@@ -90,6 +90,22 @@ Hooks de debug utiles : `window.__open(app)`, `window.__cal`, `window.__APPS`, `
 - **Messages** : la conversation s'appelle « Studio Dumora » (id interne `camille` conservé).
 - **Agenda** : 9 dates, dont Mitty le 28/11/2026 à L'Élysée Montmartre (1re partie de Spider Zed).
 
+## Performances et gestes (v18)
+
+- **Chargement à la demande** : `window.__lazy(src, cb, css)`. `paname.js` se charge à la première
+  ouverture de PANAME, MapLibre (+ CSS) à la première ouverture du Plan (`window.__mapReady(cb)`),
+  le lecteur Spotify et son API à la première ouverture de Spotify (`window.__spotifyBoot()`),
+  les images du jeu 320 à sa première partie. Préchargement discret (`rel=prefetch`) 4 s après le
+  déverrouillage, et dès que le doigt se pose sur l'icône PANAME ou Plan.
+- **Apps « froides »** : une app fermée reçoit la classe `cold` (`content-visibility: hidden`) à la
+  fin de son animation de fermeture — rien n'est dessiné ni chargé tant qu'on ne l'ouvre pas.
+  Spotify n'est jamais refroidie (la musique continue).
+- **Glisser vers l'accueil** : la carte de l'app suit le doigt (zone du bas, adaptée à la vraie
+  hauteur de l'écran : iPhone SE, Safari avec ses barres, iPad).
+- **Appui long sur une icône** (accueil et dock) : menu d'actions rapides (`window.__quickMenu`),
+  dont « Modifier l'écran d'accueil » (l'ancien mode d'édition).
+- **Météo** : dernière météo connue gardée dans `localStorage` (`selecta-wx`), bouton Réessayer.
+
 ## Ce qui reste à faire
 
 1. **Domaine** : brancher `selecta.agency` sur Netlify ou GitHub Pages (aujourd'hui l'aperçu
