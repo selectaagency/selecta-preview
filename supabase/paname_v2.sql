@@ -32,24 +32,25 @@ $$;
 -- règles d'une station (tickets, temps objectif, temps minimal plausible)
 create or replace function public.pr_rules(p_level int, out tot int, out par int, out mint int)
 language sql immutable set search_path = '' as $$
-  select 0,
+  select (array[10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10])[p_level + 1],
          (array[75, 80, 70, 80, 85, 70, 72, 80, 78, 85, 88, 170])[p_level + 1],
          (array[20, 15, 9, 14, 15, 13, 14, 12, 14, 14, 15, 27])[p_level + 1]
 $$;
 
--- score d'une station, même formule que le jeu (v3 : plus de tickets, une carte Navigo par station,
--- amendes des contrôleurs) ; null si les chiffres sont impossibles
+-- score d'une station, même formule que le jeu (v4 : tickets de métro à ramasser, 150 pts chacun,
+-- une carte Navigo par station, amendes des contrôleurs) ; null si les chiffres sont impossibles
 create or replace function public.pr_station_score(p_level int, st jsonb)
 returns int language plpgsql immutable set search_path = public as $$
-declare r record; nav int; tm numeric; fraud int; fines int; stars int;
+declare r record; nav int; tm numeric; fraud int; fines int; stars int; tix int;
 begin
   select * into r from pr_rules(p_level);
   if r.par is null then return null; end if;
   nav := coalesce((st ->> 'navigo')::int, -1); tm := coalesce((st ->> 'time')::numeric, -1);
   fraud := greatest(0, coalesce((st ->> 'fraud')::int, 0)); fines := greatest(0, coalesce((st ->> 'fines')::int, 0));
-  if nav < 0 or nav > 1 or coalesce((st ->> 'tickets')::int, 0) <> 0 or tm < r.mint or tm > 3600 or fraud > 50 or fines > 50 then return null; end if;
+  tix := coalesce((st ->> 'tickets')::int, 0);
+  if nav < 0 or nav > 1 or tix < 0 or tix > r.tot or tm < r.mint or tm > 3600 or fraud > 50 or fines > 50 then return null; end if;
   stars := 1 + nav + (case when tm <= r.par then 1 else 0 end);
-  return greatest(0, nav * 1500 + stars * 1000 + greatest(0, round((r.par * 1.5 - tm) * 20))::int - fraud * 200 - fines * 300);
+  return greatest(0, nav * 1500 + stars * 1000 + greatest(0, round((r.par * 1.5 - tm) * 20))::int + tix * 150 - fraud * 200 - fines * 300);
 end $$;
 
 -- ---------------------------------------------------------------------

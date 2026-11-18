@@ -1533,6 +1533,11 @@ body.piano-wide .lang-out { display: none; }
 .pr-hud { position: absolute; top: 50px; left: 60px; right: 10px; z-index: 3; display: none; flex-direction: column; gap: 7px; pointer-events: none; }
 .pr.playing .pr-hud { display: flex; }
 .pr-hrow { display: flex; align-items: center; gap: 7px; }
+/* compteur de tickets de métro (points) : petit ticket crème à liseré violet */
+.pr-tkchip { gap: 5px; padding: 0 9px; }
+.pr-tkchip .tkt { width: 13px; height: 9px; border-radius: 1.5px; background: linear-gradient(90deg, #7B5BB5 0 2.5px, #FBF6E4 2.5px); box-shadow: inset 0 -1.5px 0 #6B4A2E; }
+.pr-tkchip.pop { animation: tkPop .3s ease; }
+@keyframes tkPop { 40% { transform: scale(1.18); } }
 .pr-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 11px; border-radius: 16px;
   background: rgba(18,16,26,.62); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
   color: #fff; font-size: 13.5px; font-weight: 700; letter-spacing: -.01em; box-shadow: inset 0 0 0 .5px rgba(255,255,255,.14); white-space: nowrap; }
@@ -2989,6 +2994,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
           <span class="pr-chip pr-st" id="pr-st"></span>
           <span class="pr-sp"></span>
           <span class="pr-chip pr-tixchip"><span class="tk"></span><b id="pr-tix">0</b></span>
+          <span class="pr-chip pr-tkchip" title="Tickets"><span class="tkt"></span><b id="pr-tk">0</b></span>
           <span class="pr-chip pr-hearts" id="pr-hearts"></span>
         </div>
         <div class="pr-hrow"><span class="pr-prog"><i id="pr-bar"></i></span><span class="pr-chip pr-flag" id="pr-flag"></span><span class="pr-time" id="pr-time">0:00.00</span></div>
@@ -4522,7 +4528,9 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     if (!r.d || dt >= r.d) return r.p0 + (r.d ? (r.r0 + r.r1) / 2 * r.d : 0) + r.r1 * (dt - (r.d || 0));
     return r.p0 + r.r0 * dt + (r.r1 - r.r0) * dt * dt / (2 * r.d);
   }
-  function beatPhase() { var b = a3pos() * A3.bpm / 60; return b - Math.floor(b); }
+  /* position dans le morceau, ramenée dans la boucle [début audible, fin audible] */
+  function a3wrap(p) { var ls = A3.ls || 0, le = A3.le || LOOP_END, L = le - ls; return p < le ? p : ls + ((p - ls) % L + L) % L; }
+  function beatPhase() { var b = (a3wrap(a3pos()) - (A3.buf || A3.el ? BEAT_OFS : 0)) * A3.bpm / 60; return b - Math.floor(b); }
   /* change la vitesse de la musique en douceur, sans coupure ni redémarrage */
   function a3rate(r, d) {
     A3.rateTarget = r;
@@ -4563,11 +4571,19 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       A3.next += spb; A3.step++;
     }
   }
-  /* ---------- la boucle de Satine (sounds/satine-320-loop.mp3) ----------
-     Jouée par WebAudio en boucle échantillon par échantillon : aucun blanc entre deux tours.
-     La boucle fait 126 mesures à 164,77 BPM (183,53 s) : le jeu cale son tempo dessus
-     (anneau et « ON BEAT » à la blanche, 82,4 BPM). Chargée seulement quand on ouvre 320. */
-  var LOOP_URL = 'sounds/satine-320-loop.mp3', LOOP_BPM = 164.77, LOOP_END = 504 * 60 / 164.77;
+  /* ---------- la musique de Satine : « Pièce manquante » (8-bit, voix) ----------
+     Jouée par WebAudio en boucle échantillon par échantillon : à la fin du morceau, il repart du début
+     sans blanc (les silences d'encodage du début et de la fin sont retirés au décodage).
+     96 BPM, premier temps à 0,365 s : le jeu cale son anneau « ON BEAT » dessus.
+     Kappa : ×2 là où on en est, puis retour à ×1 sans coupure (a3rate). Chargée seulement quand on ouvre 320. */
+  var LOOP_URL = 'sounds/satine-piece-manquante.mp3', LOOP_BPM = 96, BEAT_OFS = 0.365, LOOP_END = 174.4;
+  /* début et fin audibles d'un morceau décodé (seuil très bas) : la boucle saute les blancs */
+  function audibleSpan(b) {
+    var d = b.getChannelData(0), n = d.length, th = 0.002, i = 0, j = n - 1;
+    while (i < n && Math.abs(d[i]) < th) i++;
+    while (j > i && Math.abs(d[j]) < th) j--;
+    return [Math.max(0, i - 32) / b.sampleRate, Math.min(n, j + 64) / b.sampleRate];
+  }
   A3.musicOff = false; try { A3.musicOff = localStorage.getItem('selecta-320-music') === 'off'; } catch (e) {}
   A3.src = null; A3.buf = null; A3.loading = null; A3.offset = 0; A3.force = false;
   function a3load() {
@@ -4575,7 +4591,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     var c = a3(); if (!c) return null;
     A3.loading = fetch(LOOP_URL).then(function (r) { if (!r.ok) throw new Error('http'); return r.arrayBuffer(); })
       .then(function (ab) { return new Promise(function (res, rej) { var pr = c.decodeAudioData(ab, res, rej); if (pr && pr.catch) pr.catch(function () {}); }); })
-      .then(function (b) { A3.buf = b; if (A3.want && !A3.src) a3music(); return b; })
+      .then(function (b) { A3.buf = b; var sp = audibleSpan(b); A3.ls = sp[0]; A3.le = sp[1]; if (A3.want && !A3.src) a3music(); return b; })
       .catch(function () {
         /* décodage impossible (vieux navigateur) : même fichier, lu par un lecteur audio classique.
            Jamais d'autre musique à la place de celle de Satine. */
@@ -4591,15 +4607,15 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     if (A3.buf) {
       if (A3.src) return;
       clearInterval(A3.timer); A3.on = false;
-      var s = c.createBufferSource(); s.buffer = A3.buf; s.loop = true; s.loopStart = 0; s.loopEnd = Math.min(LOOP_END, A3.buf.duration);
+      var s = c.createBufferSource(); s.buffer = A3.buf; s.loop = true; s.loopStart = A3.ls || 0; s.loopEnd = A3.le || A3.buf.duration;
       var g = c.createGain(); g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.exponentialRampToValueAtTime(1, c.currentTime + 0.35);
       s.connect(g); g.connect(A3.mus);
-      var off = A3.offset % s.loopEnd, at = c.currentTime + 0.04;
+      var off = A3.offset ? a3wrap(A3.offset) : (A3.ls || 0), at = c.currentTime + 0.04;
       var rt = A3.rateTarget || 1;
       s.playbackRate.value = rt;
       s.start(at, off);
       A3.src = s; A3.srcGain = g;
-      A3.bpm = LOOP_BPM / 2; A3.t0 = at - off;
+      A3.bpm = LOOP_BPM; A3.t0 = at - off;
       A3.rp = rt !== 1 ? { t: at, p0: off, r0: rt, r1: rt, d: 0 } : null;
     } else if (A3.failed) {
       if (!A3.el) { try { A3.el = new Audio(LOOP_URL); A3.el.loop = true; A3.el.preload = 'auto'; } catch (e) { return; } }
@@ -4608,14 +4624,14 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
       A3.el.volume = 0.9;
       try { A3.el.preservesPitch = false; A3.el.playbackRate = A3.rateTarget || 1; } catch (e) {}
       var pr = A3.el.play(); if (pr && pr.catch) pr.catch(function () {});
-      A3.bpm = LOOP_BPM / 2; A3.t0 = a3now() - (A3.offset % LOOP_END);
+      A3.bpm = LOOP_BPM; A3.t0 = a3now() - (A3.offset % LOOP_END);
       A3.rp = (A3.rateTarget || 1) !== 1 ? { t: a3now(), p0: A3.offset % LOOP_END, r0: A3.rateTarget, r1: A3.rateTarget, d: 0 } : null;
     }
   }
   function a3musicStop(keepPos) {
     if (A3.src) {
-      var c = A3.ctx, L = A3.src.loopEnd || LOOP_END;
-      A3.offset = keepPos ? (a3pos() % L + L) % L : 0;
+      var c = A3.ctx;
+      A3.offset = keepPos ? a3wrap(a3pos()) : 0;
       try { A3.srcGain.gain.setTargetAtTime(0.0001, c.currentTime, 0.06); A3.src.stop(c.currentTime + 0.25); } catch (e) {}
       A3.src = null;
     } else if (A3.el && !A3.el.paused) {
@@ -4653,6 +4669,9 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
     else if (k === 'kappaBye') { a3tone(740, t, 0.28, 'triangle', 0.045, null, 180); }
   }
   window.__gs = gs; window.__A3 = A3;
+  /* outils de test : position dans le morceau, saut à une position (sans changer la vitesse) */
+  window.__a3pos = function () { return a3wrap(a3pos()); };
+  window.__a3seek = function (t) { if (!A3.src && !A3.el) return; a3musicStop(true); A3.offset = t; a3music(); };
   var G_JUMP = -11.5, G_BOOST = -19, G_GRAV = 0.38, G_R = 17, G_PW = 62;
 
   function gNum(n) { return n.toLocaleString(lang === 'en' ? 'en-GB' : 'fr-FR'); }
@@ -4925,6 +4944,7 @@ html.ipad body { background: #0E0E12; background-image: radial-gradient(90% 70% 
   }
   window.__satLegs = function (v) { gs.legs = v; gDraw(); };   /* test : aperçu d'un écart de jambes donné */
   window.__kappa = function () { if (gs.mode === 'playing' && !gs.kappa) gKappaSpawn(); };
+  window.__kappaLeave = function () { if (gs.kappa) gKappaLeave(gs.kappa); };
   function gKappaLeave(k) {
     k.ph = 'leave'; k.t = 0;
     a3rate(1, 1.6);                                    /* retour progressif à la vitesse normale */
@@ -8476,7 +8496,7 @@ document.addEventListener('app:screen', function (e) {
     {
       id: 'satine', name: 'Satine', photo: 'photos/satine.jpg',
       genres: 'Pop alternative · Hyperpop · France',
-      facts: [['Label', 'Elektra / Warner'], ['Live', 'Caramba']],
+      facts: [['Label', 'Elektra / Warner'], ['Éditeur', 'Strictly Confidential'], ['Live', 'Caramba']],
       bio: [
         "Autrice, compositrice, interprète et productrice, Satine incarne une nouvelle génération d'artistes qui repoussent les frontières de la pop française. À seulement 22 ans, elle développe un univers singulier, à la croisée de l'hyperpop, des sonorités électroniques et d'une écriture aussi intime que spontanée.",
         "Révélée très jeune sur Internet, elle construit au fil des années une communauté fidèle, séduite par sa personnalité, son indépendance créative et son esthétique immédiatement reconnaissable.",
@@ -8495,7 +8515,7 @@ document.addEventListener('app:screen', function (e) {
     {
       id: 'filiz', name: 'Filiz', photo: 'photos/filiz.jpg',
       genres: 'Pop alternative · Nouvelle scène française',
-      facts: [['Label', 'Barclay / Universal']],
+      facts: [['Label', 'Barclay / Universal'], ['Éditeur', 'YCI PROD']],
       bio: [
         "Filiz s'impose progressivement comme l'une des nouvelles voix à suivre de la scène pop française. Avec une identité affirmée, une écriture instinctive et une manière bien à elle de raconter son quotidien, elle développe un univers singulier, à la fois sensible, spontané et profondément ancré dans son époque.",
         "À travers ses chansons, Filiz explore les contradictions d'une génération, entre émotions, désillusions, liberté et envie d'ailleurs. Son approche directe, portée par des mélodies accrocheuses et une personnalité authentique, lui permet de tisser un lien fort avec son public.",
